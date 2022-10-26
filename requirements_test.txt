@@ -1,0 +1,11 @@
+# linters such as flake8 and pylint should be pinned, as new releases
+# make new things fail. Manually update these pins when pulling in a
+# new version
+
+# types-* that have versions roughly corresponding to the packages they
+# contain hints for available should be kept in sync with them
+
+-c ./package_constraints.txt
+codecov==2.1.12
+coverage==6.4.4
+pytest-aiohttp==0.3.0

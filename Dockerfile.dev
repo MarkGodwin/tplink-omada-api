@@ -1,0 +1,26 @@
+FROM mcr.microsoft.com/vscode/devcontainers/python:0-3.9
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+RUN \
+    curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
+    && apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        # Additional library needed by some tests and accordingly by VScode Tests Discovery
+        git \
+        cmake \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /workspaces
+
+# Install Python dependencies from requirements
+COPY requirements.txt ./
+COPY requirements_test.txt ./
+COPY package_constraints.txt ./
+RUN pip3 install -r requirements.txt
+RUN pip3 install -r requirements_test.txt 
+RUN rm -f requirements.txt requirements_test.txt package_constraints.txt
+
+# Set the default shell to bash instead of sh
+ENV SHELL /bin/bash
