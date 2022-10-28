@@ -10,6 +10,8 @@ Not many:
 * Basic device information
 * Port status and PoE configuraton for Switches (<-- What I actually needed)
 
+Only tested with OC200 firmware version 5.5.7. Other versions may not be fully compatible.
+
 ## Future
 
 The available API surface is quite large. More of this could be exposed in the future.

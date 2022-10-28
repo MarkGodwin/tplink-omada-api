@@ -4,7 +4,7 @@
 import asyncio
 import sys
 from pprint import pprint
-from api.omadaclient import OmadaClient
+from api.omadaclient import OmadaClient, SwitchPortOverrides
 
 
 
@@ -33,8 +33,11 @@ async def do_the_magic(url: str, site: str, username: str, password: str):
         pprint(vars(port))
 
         updated_port = await client.update_switch_port(
-            switches[0], port, new_name="PortFive", apply_overrides=False, enable_poe=False)
+            switches[0], port, new_name="Port5")
         pprint(vars(updated_port))
+
+        profiles = await client.get_port_profiles()
+        pprint(vars(profiles[0]))
 
         print("Done.")
 

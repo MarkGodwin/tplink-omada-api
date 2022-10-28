@@ -344,3 +344,64 @@ class OmadaSwitchPortDetails(OmadaSwitchPort):
     def port_isolation_enabled(self) -> bool:
         """ Port isolation (Danger!) """
         return self._data["portIsolationEnable"]
+
+
+class OmadaPortProfile:
+    """ Definition of a switch port configuration profile. """
+    def __init__(self, data: Dict[str, Any]):
+        self._data = data
+
+    @property
+    def profile_id(self) -> str:
+        """ ID of this profile. """
+        return self._data["id"]
+
+    @property
+    def site(self) -> str:
+        """ Site which this profile is valid for. """
+        return self._data["site"]
+
+    @property
+    def name(self) -> str:
+        """ Name of the profile. """
+        return self._data["name"]
+
+    @property
+    def poe_mode(self) -> PoEMode:
+        """ PoE mode. """
+        return self._data["poe"]
+
+    @property
+    def bandwidth_limit_mode(self) -> BandwidthControl:
+        """ Type of bandwidth control applied. """
+        return self._data["bandWidthCtrlType"]
+
+    @property
+    def eth_802_1x_control(self) -> Eth802Dot1X:
+        """ 802.1x Auth mode """
+        return self._data["dot1x"]
+
+    @property
+    def lldp_med_enabled(self) -> bool:
+        """ LLDP Mode """
+        return self._data["lldpMedEnable"]
+
+    @property
+    def topology_notify_enabled(self) -> bool:
+        """ Topology notify mode """
+        return self._data["topoNotifyEnable"]
+
+    @property
+    def spanning_tree_enabled(self) -> bool:
+        """ Spanning tree loopback control """
+        return self._data["spanningTreeEnable"]
+
+    @property
+    def loopback_detect_enabled(self) -> bool:
+        """ Loopback detection """
+        return self._data["loopbackDetectEnable"]
+
+    @property
+    def port_isolation_enabled(self) -> bool:
+        """ Port isolation (Danger!) """
+        return self._data["portIsolationEnable"]

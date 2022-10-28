@@ -1,4 +1,5 @@
 """ Simple Http client for Omada controller REST api. """
+from os import link
 import time
 from typing import (List, Tuple, Optional, Any, Union)
 from aiohttp import client_exceptions
@@ -14,7 +15,36 @@ from .exceptions import (
     ConnectionFailed,
     BadControllerUrl
 )
-from .devices import (OmadaDevice, OmadaSwitch, OmadaSwitchPort, OmadaSwitchPortDetails)
+from .devices import (OmadaDevice, OmadaPortProfile, OmadaSwitch, OmadaSwitchPort, OmadaSwitchPortDetails)
+
+class SwitchPortOverrides:
+    """
+    Overrides that can be applied to a switch port.
+    
+    Currently, we don't support bandwidth limits and mirroring modes.
+    Due to the way the API works, we have to specify overrides for everything,
+    we can't just override a single profile setting. Therefore, you may need to
+    initialise all of these parameters to avoid overwriting settings.
+    """
+    def __init__(self,
+        enable_poe: bool = True,
+        dot1x_mode: Eth802Dot1X = Eth802Dot1X.FORCE_AUTHORIZED,
+        duplex: LinkDuplex = LinkDuplex.AUTO,
+        link_speed: LinkSpeed = LinkSpeed.SPEED_AUTO,
+        lldp_med_enable: bool = True,
+        loopback_detect: bool = True,
+        spanning_tree_enable: bool = False,
+        port_isolation: bool = False
+    ):
+        self.enable_poe = enable_poe
+        self.dot1x_mode = dot1x_mode
+        self.duplex = duplex
+        self.link_speed = link_speed
+        self.lldp_med_enable = lldp_med_enable
+        self.loopback_detect = loopback_detect
+        self.spanning_tree_enable = spanning_tree_enable
+        self.port_isolation = port_isolation
+
 
 class OmadaClient:
     """
@@ -181,15 +211,7 @@ class OmadaClient:
         index_or_port: Union[int, OmadaSwitchPort],
         new_name: Optional[str] = None,
         profile_id: Optional[str] = None,
-        apply_overrides: bool = False,
-        enable_poe: bool = True,
-        dot1x_mode: Eth802Dot1X = Eth802Dot1X.FORCE_AUTHORIZED,
-        duplex: LinkDuplex = LinkDuplex.AUTO,
-        link_speed: LinkSpeed = LinkSpeed.SPEED_AUTO,
-        lldp_med_enable: bool = True,
-        loopback_detect: bool = True,
-        spanning_tree_enable: bool = False,
-        port_isolation: bool = False
+        overrides: Optional[SwitchPortOverrides] = None
         ) -> OmadaSwitchPortDetails:
         """ Applies an existing profile to a switch on the port """
 
@@ -208,19 +230,19 @@ class OmadaClient:
         payload = {
             "name": new_name or port.name,
             "profileId": profile_id or port.profile_id,
-            "profileOverrideEnabled": apply_overrides
+            "profileOverrideEnable": not overrides is None
             }
-        if apply_overrides:
+        if overrides:
             payload["operation"] = "switching"
             payload["bandWidthCtrlType"] = BandwidthControl.OFF
-            payload["poe"] = PoEMode.ENABLED if enable_poe else PoEMode.DISABLED
-            payload["dot1x"] = dot1x_mode
-            payload["duplex"] = duplex
-            payload["linkSpeed"] = link_speed
-            payload["lldpMedEnable"] = lldp_med_enable
-            payload["loopbackDetectEnable"] = loopback_detect
-            payload["spanningTreeEnable"] = spanning_tree_enable
-            payload["portIsolationEnable"] = port_isolation
+            payload["poe"] = PoEMode.ENABLED if overrides.enable_poe else PoEMode.DISABLED
+            payload["dot1x"] = overrides.dot1x_mode
+            payload["duplex"] = overrides.duplex
+            payload["linkSpeed"] = overrides.link_speed
+            payload["lldpMedEnable"] = overrides.lldp_med_enable
+            payload["loopbackDetectEnable"] = overrides.loopback_detect
+            payload["spanningTreeEnable"] = overrides.spanning_tree_enable
+            payload["portIsolationEnable"] = overrides.port_isolation
             payload["topoNotifyEnable"] = False
 
         await self._authenticated_request(
@@ -231,6 +253,16 @@ class OmadaClient:
 
         # Read back the new port settings
         return await self.get_switch_port(mac, port)
+
+    async def get_port_profiles(self) -> List[OmadaPortProfile]:
+        """ Lists the available switch port profiles that can be applied. """
+
+        result = await self._authenticated_request(
+            "get",
+            self._format_url("setting/lan/profileSummary", self._site_id)
+        )
+
+        return [OmadaPortProfile(p) for p in result["data"]]
 
     async def _check_login(self) -> bool:
         if not self._csrf_token:
@@ -268,7 +300,7 @@ class OmadaClient:
             if s["name"] == site_name
         ]
 
-        if sites.__len__:
+        if len(sites):
             return sites[0]
 
         raise SiteNotFound(f"Site '{site_name}' not found")
