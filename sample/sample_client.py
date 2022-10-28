@@ -1,10 +1,10 @@
+#!/usr/bin/env python3
 """ Cmd line to work out the API. """
 
-#!/usr/bin/env python3
 import asyncio
 import sys
 from pprint import pprint
-from api.omadaclient import OmadaClient, SwitchPortOverrides
+from ..src.tplink_omada_client.omadaclient import OmadaClient
 
 
 

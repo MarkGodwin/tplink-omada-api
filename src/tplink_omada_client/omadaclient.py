@@ -1,11 +1,10 @@
 """ Simple Http client for Omada controller REST api. """
-from os import link
 import time
 from typing import (List, Tuple, Optional, Any, Union)
 from aiohttp import client_exceptions
 from aiohttp.client import ClientSession
 
-from api.definitions import BandwidthControl, Eth802Dot1X, LinkDuplex, LinkSpeed, PoEMode
+from .definitions import BandwidthControl, Eth802Dot1X, LinkDuplex, LinkSpeed, PoEMode
 
 from .exceptions import (
     InvalidDevice,

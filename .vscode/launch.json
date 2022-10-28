@@ -8,7 +8,7 @@
             "name": "Python: Test Client",
             "type": "python",
             "request": "launch",
-            "program": "client.py",
+            "program": "sample/sample_client.py",
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": ["https://omada.pippins.uk", "Pippins", "homeassistant", "secret_password_0"]
