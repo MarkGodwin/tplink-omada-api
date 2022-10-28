@@ -4,13 +4,13 @@ A basic Python client for calling the TP-Link Omada controller API.
 
 ## Supported features
 
-Not many:
+Only a subset of the controller's features are supported:
 * Automatic Login/Re-login
 * List Devices (APs, Gateways and Switches)
 * Basic device information
 * Port status and PoE configuraton for Switches (<-- What I actually needed)
 
-Only tested with OC200 firmware version 5.5.7. Other versions may not be fully compatible.
+Tested with OC200 firmware version 5.5.7. Other versions may not be fully compatible.
 
 ## Future
 

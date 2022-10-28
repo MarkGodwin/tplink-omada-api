@@ -14,12 +14,18 @@ from .exceptions import (
     ConnectionFailed,
     BadControllerUrl
 )
-from .devices import (OmadaDevice, OmadaPortProfile, OmadaSwitch, OmadaSwitchPort, OmadaSwitchPortDetails)
+from .devices import (
+    OmadaDevice,
+    OmadaPortProfile,
+    OmadaSwitch,
+    OmadaSwitchPort,
+    OmadaSwitchPortDetails
+)
 
 class SwitchPortOverrides:
     """
     Overrides that can be applied to a switch port.
-    
+
     Currently, we don't support bandwidth limits and mirroring modes.
     Due to the way the API works, we have to specify overrides for everything,
     we can't just override a single profile setting. Therefore, you may need to

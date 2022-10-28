@@ -4,9 +4,7 @@
 import asyncio
 import sys
 from pprint import pprint
-from ..src.tplink_omada_client.omadaclient import OmadaClient
-
-
+from src.tplink_omada_client.omadaclient import OmadaClient
 
 async def do_the_magic(url: str, site: str, username: str, password: str):
     """ Not a real test client. """
