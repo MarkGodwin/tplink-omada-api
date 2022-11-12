@@ -10,12 +10,14 @@ from .exceptions import (
     InvalidDevice,
     UnsupportedControllerVersion,
     SiteNotFound,
+    LoginFailed,
     RequestFailed,
     ConnectionFailed,
     BadControllerUrl
 )
 from .devices import (
     OmadaDevice,
+    OmadaInterfaceDetails,
     OmadaPortProfile,
     OmadaSwitch,
     OmadaSwitchPort,
@@ -130,6 +132,12 @@ class OmadaClient:
         self._last_logon = time.time()
 
         self._site_id = await self._get_site_id(self._site)
+
+    async def get_controller_name(self) -> str:
+        """ Get the display name of the Omada controller. """
+        result = await self._authenticated_request("get", self._format_url("maintenance/uiInterface"))
+
+        return OmadaInterfaceDetails(result).controller_name
 
     async def get_devices(self) -> List[OmadaDevice]:
         """ Get the list of devices on the site. """
@@ -374,5 +382,6 @@ class OmadaClient:
             return
         if response["errorCode"] == 0:
             return
-
+        if response["errorCode"] == -30109:
+            raise LoginFailed(response["errorCode"], response["msg"])
         raise RequestFailed(response["errorCode"], response["msg"])

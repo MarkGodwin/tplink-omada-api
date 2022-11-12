@@ -12,6 +12,8 @@ async def do_the_magic(url: str, site: str, username: str, password: str):
     async with OmadaClient(url, username, password,site=site) as client:
         devices = await client.get_devices()
 
+        print(f"Found Omada Controller: {await client.get_controller_name()}")
+
         print(f"Found {len(devices)} Omada devices.")
         print(f"    {len([d for d in devices if d.type == 'ap'])} Access Points.")
         print(f"    {len([d for d in devices if d.type == 'switch'])} Switches.")

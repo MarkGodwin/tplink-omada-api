@@ -197,6 +197,28 @@ class OmadaSwitchPort:
         """ Status of the port. """
         return OmadaPortStatus(self._data["portStatus"])
 
+
+class OmadaSwitchDeviceCaps:
+    """ Capabilities of a switch. """
+    def __init__(self, data: Dict[str, Any]):
+        self._data = data
+
+    @property
+    def poe_ports(self) -> int:
+        """ Number of PoE ports supported. """
+        return self._data["poePortNum"]
+
+    @property
+    def supports_poe(self) -> bool:
+        """ Is PoE supported. """
+        return self._data["poeSupport"]
+
+    @property
+    def supports_bt(self) -> bool:
+        """ Is BT supported. """
+        return self._data["supportBt"]
+
+
 class OmadaSwitch(OmadaDevice):
     """ Details of a switch connected to the controller. """
 
@@ -228,6 +250,10 @@ class OmadaSwitch(OmadaDevice):
             return [OmadaDownlink(d) for d in self._data["downlinkList"]]
         return []
 
+    @property
+    def device_capabilities(self) -> OmadaSwitchDeviceCaps:
+        """ Capabilities of the switch. """
+        return OmadaSwitchDeviceCaps(self._data["devCap"])
 
 class OmadaAccessPoint(OmadaDevice):
     """ Details of an Access Point connected to the controller. """
@@ -405,3 +431,13 @@ class OmadaPortProfile:
     def port_isolation_enabled(self) -> bool:
         """ Port isolation (Danger!) """
         return self._data["portIsolationEnable"]
+
+class OmadaInterfaceDetails:
+    """ Basic UI Information about controller. """
+    def __init__(self, data: Dict[str, Any]):
+        self._data = data
+
+    @property
+    def controller_name(self) -> str:
+        """ Display name of the controller. """
+        return self._data["controllerName"]

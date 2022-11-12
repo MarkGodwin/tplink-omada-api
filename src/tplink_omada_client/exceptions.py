@@ -10,6 +10,9 @@ class RequestFailed(OmadaClientException):
         self._msg = msg
         super().__init__(f"Omada controller responded '{msg}' ({error_code})")
 
+class LoginFailed(RequestFailed):
+    """ Username/Password failure. """
+
 class UnsupportedControllerVersion(OmadaClientException):
     """
     Indicates the Omada controller has a software version that is not supported.
