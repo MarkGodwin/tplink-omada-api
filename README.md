@@ -12,11 +12,14 @@ pip install tplink-omada-client
 
 Only a subset of the controller's features are supported:
 * Automatic Login/Re-login
-* List Devices (APs, Gateways and Switches)
-* Basic device information
-* Port status and PoE configuraton for Switches (<-- What I actually needed)
+* Basic controller information
+* List sites
+* Within site:
+    * List Devices (APs, Gateways and Switches)
+    * Basic device information
+    * Port status and PoE configuraton for Switches (<-- What I actually needed)
 
-Tested with OC200 firmware version 5.5.7. Other versions may not be fully compatible.
+Tested with OC200 on Omada Controller Version 5.5.7 - 5.7.6. Other versions may not be fully compatible.
 
 ## Future
 

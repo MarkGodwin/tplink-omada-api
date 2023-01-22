@@ -6,58 +6,60 @@ import sys
 from pprint import pprint
 from src.tplink_omada_client.omadaclient import OmadaClient
 
-async def do_the_magic(url: str, site: str, username: str, password: str):
+async def do_the_magic(url: str, username: str, password: str):
     """ Not a real test client. """
 
-    async with OmadaClient(url, username, password,site=site) as client:
-        devices = await client.get_devices()
+    async with OmadaClient(url, username, password) as client:
 
         print(f"Found Omada Controller: {await client.get_controller_name()}")
 
-        print(f"Found {len(devices)} Omada devices.")
-        print(f"    {len([d for d in devices if d.type == 'ap'])} Access Points.")
-        print(f"    {len([d for d in devices if d.type == 'switch'])} Switches.")
-        print(f"    {len([d for d in devices if d.type == 'gateway'])} Routers.")
+        sites = await client.get_sites()
+        print(f"Found {len(sites)} sites")
+        for site in sites:
+            print(f"Connecting to {site.name}")
 
-        pprint(vars(devices[0]))
+            site_client = await client.get_site_client(sites[0])
 
-        # Get full info of all switches
-        switches = [await client.get_switch(s) for s in devices if s.type == "switch"]
+            devices = await site_client.get_devices()
 
-        pprint(vars(switches[0]))
+            print(f"Found {len(devices)} Omada devices in site {site.name}.")
+            print(f"    {len([d for d in devices if d.type == 'ap'])} Access Points.")
+            print(f"    {len([d for d in devices if d.type == 'switch'])} Switches.")
+            print(f"    {len([d for d in devices if d.type == 'gateway'])} Routers.")
 
-        #ports = await client.get_switch_ports(switches[0])
+            #pprint(vars(devices[0]))
 
-        port = await client.get_switch_port(switches[0], switches[0].ports[4])
-        print(f"Port index 4: {port.name} Profile: {port.profile_name}")
-        pprint(vars(port))
+            # Get full info of all switches
+            switches = [await site_client.get_switch(s) for s in devices if s.type == "switch"]
 
-        updated_port = await client.update_switch_port(
-            switches[0], port, new_name="Port5")
-        pprint(vars(updated_port))
+            #pprint(vars(switches[0]))
 
-        profiles = await client.get_port_profiles()
-        pprint(vars(profiles[0]))
+            #ports = await client.get_switch_ports(switches[0])
+
+            port = await site_client.get_switch_port(switches[0], switches[0].ports[4])
+            print(f"Port index 4: {port.name} Profile: {port.profile_name}")
+            pprint(vars(port))
+
+            updated_port = await site_client.update_switch_port(
+                switches[0], port, new_name="Port5")
+            pprint(vars(updated_port))
+
+            profiles = await site_client.get_port_profiles()
+            pprint(vars(profiles[0]))
 
         print("Done.")
 
-
-
-
-
 def main():
     """ Basic sample test client. """
-    if len(sys.argv) < 3:
-        print("Usage: client <omada url> <site> [username] [password]")
-    else:
-        print("Will it work?")
+    if len(sys.argv) < 2 or len(sys.argv) > 4:
+        print("Usage: client <omada url> [username] [password]")
+        return
 
     omadaurl = sys.argv[1]
-    site =  sys.argv[2]
-    username = "admin" if len(sys.argv) < 4 else sys.argv[3]
-    password = "admin" if len(sys.argv) < 5 else sys.argv[4]
+    username = "admin" if len(sys.argv) < 3 else sys.argv[2]
+    password = "admin" if len(sys.argv) < 4 else sys.argv[3]
 
-    asyncio.run(do_the_magic(omadaurl, site, username, password))
+    asyncio.run(do_the_magic(omadaurl, username, password))
 
 
 main()

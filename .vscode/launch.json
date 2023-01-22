@@ -11,7 +11,7 @@
             "program": "sample_client.py",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "args": ["https://omada.pippins.uk", "Pippins", "homeassistant", "secret_password_0"]
+            "args": ["https://192.168.1.50", "admin", "admin"]
         }
     ]
 }
