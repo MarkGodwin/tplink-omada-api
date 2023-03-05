@@ -3,11 +3,19 @@
 import time
 from typing import Any, Optional, Tuple
 
-from aiohttp import client_exceptions
+import re
+from urllib.parse import urlsplit, urljoin
+from aiohttp import client_exceptions, CookieJar
 from aiohttp.client import ClientSession
 
-from .exceptions import (BadControllerUrl, ConnectionFailed, LoginFailed,
-                         RequestFailed, UnsupportedControllerVersion)
+from .exceptions import (
+    BadControllerUrl,
+    ConnectionFailed,
+    LoginFailed,
+    LoginSessionClosed,
+    RequestFailed,
+    UnsupportedControllerVersion,
+)
 
 
 class OmadaApiConnection:
@@ -20,13 +28,19 @@ class OmadaApiConnection:
     _last_logon: float
 
     def __init__(
-            self,
-            url: str,
-            username: str,
-            password: str,
-            websession: Optional[ClientSession] = None,
-            verify_ssl=True
+        self,
+        url: str,
+        username: str,
+        password: str,
+        websession: Optional[ClientSession] = None,
+        verify_ssl=True,
     ):
+
+        if not url.lower().startswith(("http://", "https://")):
+            url = "https://" + url
+        url_parts = urlsplit(url, "https://")
+        self._url = url_parts.geturl()
+        self._host = url_parts.hostname or ""
 
         self._url = url
         self._username = username
@@ -38,7 +52,13 @@ class OmadaApiConnection:
     async def _get_session(self) -> ClientSession:
         if self._session is None:
             self._own_session = True
-            self._session = ClientSession()
+            jar = (
+                None
+                if re.fullmatch(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", self._host)
+                is None
+                else CookieJar(unsafe=True)
+            )
+            self._session = ClientSession(cookie_jar=jar)
         return self._session
 
     async def __aenter__(self):
@@ -75,7 +95,9 @@ class OmadaApiConnection:
         self._controller_version = version
 
         auth = {"username": self._username, "password": self._password}
-        response = await self._do_request("post", self.format_url("login"), payload=auth)
+        response = await self._do_request(
+            "post", self.format_url("login"), payload=auth
+        )
 
         self._csrf_token = response["token"]
         self._last_logon = time.time()
@@ -96,23 +118,23 @@ class OmadaApiConnection:
             if logged_in:
                 self._last_logon = time.time()
             return logged_in
-        except: # pylint: disable=bare-except
+        except:  # pylint: disable=bare-except
             return False
 
     async def _get_controller_info(self) -> Tuple[str, str]:
         """Get Omada controller version and Id (unauthenticated)."""
 
-        response = await self._do_request("get", f"{self._url}/api/info")
+        response = await self._do_request("get", urljoin(self._url, "/api/info"))
 
-        return (response["controllerVer"],response["omadacId"])
+        return (response["controllerVer"], response["omadacId"])
 
-    def format_url(self, end_point:str, site:Optional[str]=None) -> str:
+    def format_url(self, end_point: str, site: Optional[str] = None) -> str:
         """Get a REST url for the controller action"""
 
         if site:
             end_point = f"sites/{site}/{end_point}"
 
-        return f"{self._url}/{self._controller_id}/api/v2/{end_point}"
+        return urljoin(self._url, f"/{self._controller_id}/api/v2/{end_point}")
 
     async def request(self, method: str, url: str, params=None, payload=None) -> Any:
         """Perform a request specific to the controlller, with authentication"""
@@ -122,7 +144,9 @@ class OmadaApiConnection:
 
         return await self._do_request(method, url, params=params, payload=payload)
 
-    async def _do_request(self, method: str, url: str, params=None, payload=None) -> Any:
+    async def _do_request(
+        self, method: str, url: str, params=None, payload=None
+    ) -> Any:
         """Perform a request on the controller, and unpack the response."""
 
         session = await self._get_session()
@@ -135,12 +159,12 @@ class OmadaApiConnection:
 
         try:
             async with session.request(
-                    method,
-                    url,
-                    params=params,
-                    headers=headers,
-                    json=payload,
-                    ssl=self._verify_ssl,
+                method,
+                url,
+                params=params,
+                headers=headers,
+                json=payload,
+                ssl=self._verify_ssl,
             ) as response:
 
                 if response.status != 200:
@@ -149,6 +173,10 @@ class OmadaApiConnection:
                         self._check_application_errors(content)
 
                     raise RequestFailed(response.status, "HTTP Request Error")
+
+                # If something goes wrong with the login session, Omada requests return "success", and a login page. :/
+                if response.content_type != "application/json":
+                    raise LoginSessionClosed()
 
                 content = await response.json()
                 self._check_application_errors(content)

@@ -1,5 +1,5 @@
 """ Simple Http client for Omada controller REST api. """
-from typing import (NamedTuple, Optional, Union)
+from typing import NamedTuple, Optional, Union
 from aiohttp.client import ClientSession
 
 from .omadasiteclient import OmadaSiteClient
@@ -13,10 +13,13 @@ from .devices import (
     OmadaInterfaceDetails,
 )
 
+
 class OmadaSite(NamedTuple):
     """Identifies a site controlled by the controller."""
+
     name: str
     id: str
+
 
 class OmadaClient:
     """
@@ -25,13 +28,14 @@ class OmadaClient:
     Provides a very limited subset of the API documented in the
     'Omada_SDN_Controller_V5.0.15 API Document'
     """
+
     def __init__(
-            self,
-            url: str,
-            username: str,
-            password: str,
-            websession: Optional[ClientSession] = None,
-            verify_ssl=True,
+        self,
+        url: str,
+        username: str,
+        password: str,
+        websession: Optional[ClientSession] = None,
+        verify_ssl=True,
     ):
         self._api = OmadaApiConnection(url, username, password, websession, verify_ssl)
 
@@ -55,8 +59,10 @@ class OmadaClient:
         return await self._api.login()
 
     async def get_controller_name(self) -> str:
-        """ Get the display name of the Omada controller. """
-        result = await self._api.request("get", self._api.format_url("maintenance/uiInterface"))
+        """Get the display name of the Omada controller."""
+        result = await self._api.request(
+            "get", self._api.format_url("maintenance/uiInterface")
+        )
 
         return OmadaInterfaceDetails(result).controller_name
 
@@ -64,14 +70,12 @@ class OmadaClient:
         """Get basic list of sites the user can see"""
         response = await self._api.request("get", self._api.format_url("users/current"))
 
-        sites = [
-            OmadaSite(s["name"], s["key"]) for s in response["privilege"]["sites"]
-        ]
+        sites = [OmadaSite(s["name"], s["key"]) for s in response["privilege"]["sites"]]
         return sites
 
     async def get_site_client(self, site: Union[str, OmadaSite]) -> OmadaSiteClient:
         """Get a client that can query the specified Omada site."""
-        if isinstance(site,OmadaSite):
+        if isinstance(site, OmadaSite):
             site_id = site.id
         else:
             site_id = await self._get_site_id(site)
