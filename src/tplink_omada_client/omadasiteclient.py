@@ -312,7 +312,7 @@ class OmadaSiteClient:
         payload = {"mac": mac}
         await self._api.request(
             "post",
-            self._api.format_url(f"devices/{mac}/onlineUpgrade", self._site_id),
+            self._api.format_url(f"cmd/devices/{mac}/onlineUpgrade", self._site_id),
             payload=payload,
         )
 
