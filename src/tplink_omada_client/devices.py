@@ -72,6 +72,11 @@ class OmadaDevice:
         """Uptime of the device, as a display string"""
         return self._data["uptimeLong"]
 
+    @property
+    def firmware_version(self) -> str:
+        """Firmware version of the device"""
+        return self._data["firmwareVersion"]
+
 
 class OmadaListDevice(OmadaDevice):
     """An Omada Device (router, switch, eap) as represented in the device list"""
@@ -514,3 +519,25 @@ class OmadaInterfaceDetails:
     def controller_name(self) -> str:
         """Display name of the controller."""
         return self._data["controllerName"]
+
+
+class OmadaFirmwareUpdate:
+    """Status information for a switch port."""
+
+    def __init__(self, data: Dict[str, Any]):
+        self._data = data
+
+    @property
+    def current_version(self) -> str:
+        """Device's current firmware version."""
+        return self._data["curFwVer"]
+
+    @property
+    def latest_version(self) -> str:
+        """Latest firmware version available."""
+        return self._data["lastFwVer"]
+
+    @property
+    def release_notes(self) -> str:
+        """Release notes for the new firmware."""
+        return self._data["fwReleaseLog"]

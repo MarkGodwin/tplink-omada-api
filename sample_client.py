@@ -29,18 +29,26 @@ async def do_the_magic(url: str, username: str, password: str):
             print(f"    {len([d for d in devices if d.type == 'switch'])} Switches.")
             print(f"    {len([d for d in devices if d.type == 'gateway'])} Routers.")
 
-            aps = [
+            for firmware_details in [
+                await site_client.get_firmware_details(d)
+                for d in devices
+                if d.need_upgrade
+            ]:
+                print("Available firmware upgrade:")
+                pprint(vars(firmware_details))
+
+            access_points = [
                 await site_client.get_access_point(a) for a in devices if a.type == "ap"
             ]
-            for a in aps:
-                print(f"Access Point: {a.name}")
-                if a.name == "Office":
+            for access_point in access_points:
+                print(f"Access Point: {access_point.name}")
+                if access_point.name == "Office":
                     port_status = await site_client.update_access_point_port(
-                        a, "ETH3", AccessPointPortSettings(enable_poe=True)
+                        access_point, "ETH3", AccessPointPortSettings(enable_poe=True)
                     )
                     pprint(vars(port_status))
                     port_status = await site_client.update_access_point_port(
-                        a, "ETH3", AccessPointPortSettings(enable_poe=False)
+                        access_point, "ETH3", AccessPointPortSettings(enable_poe=False)
                     )
                     pprint(vars(port_status))
 
