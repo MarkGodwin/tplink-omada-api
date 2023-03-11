@@ -6,6 +6,7 @@ from .omadaapiconnection import OmadaApiConnection
 from .devices import (
     OmadaAccessPoint,
     OmadaDevice,
+    OmadaFirmwareUpdate,
     OmadaListDevice,
     OmadaPortProfile,
     OmadaSwitch,
@@ -190,7 +191,7 @@ class OmadaSiteClient:
         """Update the settings for a lan port on the access point."""
 
         # Get the latest representation of the acccess point
-        ap = await self.get_access_point(mac_or_device)
+        access_point = await self.get_access_point(mac_or_device)
 
         port_settings = [
             {
@@ -206,7 +207,7 @@ class OmadaSiteClient:
                 if setting.enable_poe is not None and ps.supports_poe
                 else ps.poe_enable,
             }
-            for ps in ap.lan_port_settings
+            for ps in access_point.lan_port_settings
             if ps.port_name == port_name
         ]
 
@@ -214,7 +215,7 @@ class OmadaSiteClient:
 
         result = await self._api.request(
             "patch",
-            self._api.format_url(f"eaps/{ap.mac}", self._site_id),
+            self._api.format_url(f"eaps/{access_point.mac}", self._site_id),
             payload=payload,
         )
 
@@ -281,3 +282,38 @@ class OmadaSiteClient:
         )
 
         return [OmadaPortProfile(p) for p in result["data"]]
+
+    async def get_firmware_details(
+        self, mac_or_device: Union[str, OmadaDevice]
+    ) -> OmadaFirmwareUpdate:
+        """Get details of the device firware and available upgrades."""
+
+        if isinstance(mac_or_device, OmadaDevice):
+            mac = mac_or_device.mac
+        else:
+            mac = mac_or_device
+
+        result = await self._api.request(
+            "get", self._api.format_url(f"devices/{mac}/firmware", self._site_id)
+        )
+
+        return OmadaFirmwareUpdate(result)
+
+    async def start_firmware_upgrade(
+        self, mac_or_device: Union[str, OmadaDevice]
+    ) -> bool:
+        """Begin an automatic firmware upgrade of the specified device"""
+
+        if isinstance(mac_or_device, OmadaDevice):
+            mac = mac_or_device.mac
+        else:
+            mac = mac_or_device
+
+        payload = {"mac": mac}
+        await self._api.request(
+            "post",
+            self._api.format_url(f"devices/{mac}/onlineUpgrade", self._site_id),
+            payload=payload,
+        )
+
+        return True
