@@ -20,6 +20,9 @@ dependencies = [
   "aiohttp >= 3.8.1, <4"
 ]
 
+[project.scripts]
+omada = "tplink_omada_client.cli:main"
+
 [project.urls]
 "Homepage" = "https://github.com/MarkGodwin/tplink-omada-api"
 "Bug Tracker" = "https://github.com/MarkGodwin/tplink-omada-api/issues"
