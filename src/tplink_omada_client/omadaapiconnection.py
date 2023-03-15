@@ -42,8 +42,13 @@ class OmadaApiConnection:
         return self._session
 
     async def __aenter__(self):
-        await self.login()
-        return self
+        try:
+            await self.login()
+            return self
+        except Exception as error:
+            if self._own_session:
+                await self.close()
+            raise error
 
     async def __aexit__(self, *args):
         """Call when the client is disposed."""
