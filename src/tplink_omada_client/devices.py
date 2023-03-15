@@ -238,6 +238,8 @@ class OmadaSwitch(OmadaDevice):
     @property
     def uplink(self) -> Optional[OmadaUplink]:
         """ Uplink device for this switch. """
+        if not "uplink" in self._data:
+            return None
         uplink = self._data["uplink"]
         if uplink is None:
             return None
