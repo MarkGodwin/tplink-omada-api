@@ -17,7 +17,9 @@ Only a subset of the controller's features are supported:
 * Within site:
     * List Devices (APs, Gateways and Switches)
     * Basic device information
-    * Port status and PoE configuraton for Switches (<-- What I actually needed)
+    * Get firmware information and initiating automatic updates
+    * Port status and configuraton for Switches
+    * Lan port configuration for Access Points
 
 Tested with OC200 on Omada Controller Version 5.5.7 - 5.7.6. Other versions may not be fully compatible.
 
