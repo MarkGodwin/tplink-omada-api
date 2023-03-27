@@ -13,7 +13,7 @@ async def command_devices(args) -> int:
     async with to_omada_connection(config) as client:
         site_client = await client.get_site_client(config.site)
         for device in await site_client.get_devices():
-            print(f"{device.mac} {device.type:>6}  {device.name:20} {device.model_display_name}")
+            print(f"{device.mac} {device.ip_address:>15} {device.type:>6}  {device.name:20} {device.model_display_name}")
     return 0
 
 def arg_parser(subparsers: _SubParsersAction) -> None:

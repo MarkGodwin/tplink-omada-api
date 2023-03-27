@@ -8,6 +8,8 @@ from tplink_omada_client.exceptions import LoginFailed
 
 from . import (
     command_devices,
+    command_switch,
+    command_switches,
     command_target,
     command_targets,
 )
@@ -28,6 +30,8 @@ def main(argv: Union[Sequence[str], None] = None) -> int:
     )
 
     command_devices.arg_parser(subparsers)
+    command_switch.arg_parser(subparsers)
+    command_switches.arg_parser(subparsers)
     command_target.arg_parser(subparsers)
     command_targets.arg_parser(subparsers)
 
