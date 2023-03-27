@@ -70,11 +70,12 @@ class OmadaApiConnection:
                 await self.close()
             raise error
 
-    async def __aexit__(self, *args):
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> bool:
         """Call when the client is disposed."""
         # Close the web session, if we created it (i.e. it was not passed in)
         if self._own_session:
             await self.close()
+        return False
 
     async def close(self):
         """Close the current web session."""
