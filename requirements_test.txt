@@ -6,6 +6,5 @@
 # contain hints for available should be kept in sync with them
 
 -c ./package_constraints.txt
-codecov==2.1.12
 coverage==6.4.4
 pytest-aiohttp==0.3.0
