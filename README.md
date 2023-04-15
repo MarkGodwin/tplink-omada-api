@@ -29,7 +29,7 @@ This package provides a simple CLI for interacting with one or more Omada Contro
 CLI, you must first target a Controller.
 
 ```sh
-$ omada -t NAME target --url https://your.omada.controller.here --user admin --password password --site MySite
+$ omada -t NAME target --url https://your.omada.controller.here --user admin --password password --site MySite --set-default
 ```
 
 Where `NAME` is a name of your choosing to identify the targeted controller. `--site` defaults to the Omada
@@ -39,7 +39,7 @@ password.
 Once you have successfully targeted a controller you can test that things are working by running:
 
 ```sh
-$ omada -t NAME devices
+$ omada devices
 ```
 
 This will list all the devices being managed by your controller.
@@ -49,6 +49,9 @@ To see a list of all the available commands, run:
 ```sh
 $ omada -h
 ```
+
+You can set up multiple targets (controllers and sites), and specify the target with the `-t <NAME>` parameter.
+If you don't specify a target, the default will be used, if that has been set.
 
 The CLI is still young so if there is any functionality you need, please create an issue and let us know.
 

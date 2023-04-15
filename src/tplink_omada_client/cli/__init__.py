@@ -12,6 +12,7 @@ from . import (
     command_switches,
     command_target,
     command_targets,
+    command_default
 )
 
 def main(argv: Union[Sequence[str], None] = None) -> int:
@@ -22,6 +23,7 @@ def main(argv: Union[Sequence[str], None] = None) -> int:
     parser.add_argument(
         '-t', '--target',
         help="The target Omada controller",
+        default=""
     )
 
     subparsers = parser.add_subparsers(
@@ -34,6 +36,7 @@ def main(argv: Union[Sequence[str], None] = None) -> int:
     command_switches.arg_parser(subparsers)
     command_target.arg_parser(subparsers)
     command_targets.arg_parser(subparsers)
+    command_default.arg_parser(subparsers)
 
     try:
         args = parser.parse_args(args=argv)
