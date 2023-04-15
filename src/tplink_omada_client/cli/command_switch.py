@@ -3,16 +3,17 @@
 from argparse import ArgumentParser
 
 from .config import get_target_config, to_omada_connection
-from .util import assert_target_argument
+from .util import dump_raw_data, get_mac, get_target_argument
 
 async def command_switch(args) -> int:
     """Executes 'switch' command"""
-    controller = assert_target_argument(args)
+    controller = get_target_argument(args)
     config = get_target_config(controller)
 
     async with to_omada_connection(config) as client:
         site_client = await client.get_site_client(config.site)
-        switch = await site_client.get_switch(args['mac'])
+        mac = await get_mac(site_client, args['mac'])
+        switch = await site_client.get_switch(mac)
         print(f"Name: {switch.name}")
         print(f"Address: {switch.mac} ({switch.ip_address})")
         print(f"Ports: {switch.number_of_ports}")
@@ -29,6 +30,8 @@ async def command_switch(args) -> int:
             for downlink in switch.downlink:
                 print(f"- {downlink.mac} {downlink.name}")
 
+        dump_raw_data(args, switch)
+
     return 0
 
 def arg_parser(subparsers) -> None:
@@ -41,5 +44,7 @@ def arg_parser(subparsers) -> None:
 
     switch_parser.add_argument(
         "mac",
-        help="The MAC address of the switch",
+        help="The MAC address or name of the switch",
     )
+    switch_parser.add_argument('-d', '--dump', help="Output raw device information",  action='store_true')
+

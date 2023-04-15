@@ -3,11 +3,11 @@
 from argparse import _SubParsersAction
 
 from .config import get_target_config, to_omada_connection
-from .util import assert_target_argument
+from .util import dump_raw_data, get_target_argument
 
 async def command_switches(args) -> int:
     """Executes 'switches' command"""
-    controller = assert_target_argument(args)
+    controller = get_target_argument(args)
     config = get_target_config(controller)
 
     async with to_omada_connection(config) as client:
@@ -25,6 +25,8 @@ async def command_switches(args) -> int:
                     print("\u26a1", end="")
                 else:
                     print("  ", end="")
+
+            dump_raw_data(args, switch)
             print()
     return 0
 
@@ -35,3 +37,4 @@ def arg_parser(subparsers: _SubParsersAction) -> None:
         aliases=['s'],
         help="Lists switches managed by Omada Controller")
     switches_parser.set_defaults(func=command_switches)
+    switches_parser.add_argument('-d', '--dump', help="Output raw device information",  action='store_true')

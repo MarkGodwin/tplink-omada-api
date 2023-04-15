@@ -5,13 +5,36 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Test Client",
+            "name": "CLI: List Devices",
             "type": "python",
             "request": "launch",
-            "program": "sample_client.py",
-            "console": "integratedTerminal",
+            "module": "tplink_omada_client.cli",
             "justMyCode": true,
-            "args": ["https://192.168.1.50", "admin", "admin"]
+            "args": ["devices"]
+        },
+        {
+            "name": "CLI: List Targets",
+            "type": "python",
+            "request": "launch",
+            "module": "tplink_omada_client.cli",
+            "justMyCode": true,
+            "args": ["targets"]
+        },
+        {
+            "name": "CLI: List Switches",
+            "type": "python",
+            "request": "launch",
+            "module": "tplink_omada_client.cli",
+            "justMyCode": true,
+            "args": ["switches"]
+        },
+        {
+            "name": "CLI: Get Switch",
+            "type": "python",
+            "request": "launch",
+            "module": "tplink_omada_client.cli",
+            "justMyCode": true,
+            "args": ["switch", "Main Switch", "--dump"]
         }
     ]
 }

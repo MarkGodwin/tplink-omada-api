@@ -8,8 +8,8 @@ from .config import (
 async def command_targets(args) -> int: # pylint: disable=unused-argument
     """Executes 'targets' command"""
     controllers = get_targets()
-    for (controller, url) in controllers:
-        print(f"{controller:15} {url}")
+    for (controller, url, is_default) in controllers:
+        print(f"{('*' if is_default else' ')} {controller:15} {url}")
     return 0
 
 def arg_parser(subparsers: _SubParsersAction) -> None:

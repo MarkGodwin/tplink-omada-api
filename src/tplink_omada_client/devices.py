@@ -3,7 +3,7 @@ Definitions for Omada device objects
 
 APs, Switches and Routers
 """
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 from .definitions import (
     BandwidthControl,
     DeviceStatus,
@@ -15,12 +15,17 @@ from .definitions import (
     PortType,
 )
 
-
-class OmadaDevice:
-    """Details of a device connected to the controller"""
-
-    def __init__(self, data: Dict[str, Any]):
+class OmadaApiData:
+    def __init__(self, data: dict[str, Any]):
         self._data = data
+
+    @property
+    def raw_data(self) -> dict[str, Any]:
+        return self._data
+
+
+class OmadaDevice(OmadaApiData):
+    """Details of a device connected to the controller"""
 
     @property
     def type(self) -> str:
@@ -92,11 +97,8 @@ class OmadaListDevice(OmadaDevice):
         return self._data["fwDownload"]
 
 
-class OmadaLink:
+class OmadaLink(OmadaApiData):
     """Up/Downlink connection from a switch/ap device."""
-
-    def __init__(self, data: Dict[str, Any]):
-        self._data = data
 
     @property
     def mac(self) -> str:
@@ -137,11 +139,8 @@ class OmadaUplink(OmadaLink):
     """Uplink connection from a switch/ap device."""
 
 
-class OmadaPortStatus:
+class OmadaPortStatus(OmadaApiData):
     """Status information for a switch port."""
-
-    def __init__(self, data: Dict[str, Any]):
-        self._data = data
 
     @property
     def link_status(self) -> LinkStatus:
@@ -181,11 +180,8 @@ class OmadaPortStatus:
         return self._data["stpDiscarding"]
 
 
-class OmadaSwitchPort:
+class OmadaSwitchPort(OmadaApiData):
     """Port on a switch/gateway device."""
-
-    def __init__(self, data: Dict[str, Any]):
-        self._data = data
 
     @property
     def port(self) -> int:
@@ -223,11 +219,8 @@ class OmadaSwitchPort:
         return OmadaPortStatus(self._data["portStatus"])
 
 
-class OmadaSwitchDeviceCaps:
+class OmadaSwitchDeviceCaps(OmadaApiData):
     """Capabilities of a switch."""
-
-    def __init__(self, data: Dict[str, Any]):
-        self._data = data
 
     @property
     def poe_ports(self) -> int:
@@ -284,11 +277,8 @@ class OmadaSwitch(OmadaDevice):
         return OmadaSwitchDeviceCaps(self._data["devCap"])
 
 
-class OmadaAccesPointLanPortSettings:
+class OmadaAccesPointLanPortSettings(OmadaApiData):
     """A LAN port on an access point."""
-
-    def __init__(self, data: Dict[str, Any]):
-        self._data = data
 
     @property
     def port_name(self) -> str:
@@ -449,11 +439,8 @@ class OmadaSwitchPortDetails(OmadaSwitchPort):
         return self._data["portIsolationEnable"]
 
 
-class OmadaPortProfile:
+class OmadaPortProfile(OmadaApiData):
     """Definition of a switch port configuration profile."""
-
-    def __init__(self, data: Dict[str, Any]):
-        self._data = data
 
     @property
     def profile_id(self) -> str:
@@ -511,11 +498,8 @@ class OmadaPortProfile:
         return self._data["portIsolationEnable"]
 
 
-class OmadaInterfaceDetails:
+class OmadaInterfaceDetails(OmadaApiData):
     """Basic UI Information about controller."""
-
-    def __init__(self, data: Dict[str, Any]):
-        self._data = data
 
     @property
     def controller_name(self) -> str:
@@ -523,11 +507,8 @@ class OmadaInterfaceDetails:
         return self._data["controllerName"]
 
 
-class OmadaFirmwareUpdate:
+class OmadaFirmwareUpdate(OmadaApiData):
     """Status information for a switch port."""
-
-    def __init__(self, data: Dict[str, Any]):
-        self._data = data
 
     @property
     def current_version(self) -> str:
