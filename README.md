@@ -22,6 +22,7 @@ Only a subset of the controller's features are supported:
     * Lan port configuration for Access Points
 
 Tested with OC200 on Omada Controller Version 5.5.7 - 5.7.6. Other versions may not be fully compatible.
+Version 5.0.x is definitely not compatible.
 
 ## CLI
 

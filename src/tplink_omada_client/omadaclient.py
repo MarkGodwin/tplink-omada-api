@@ -47,7 +47,6 @@ class OmadaClient:
         """Call when the client is disposed."""
         # Close the web session, if we created it (i.e. it was not passed in)
         return await self._api.__aexit__(*args)
-        
 
     async def login(self) -> str:
         """
