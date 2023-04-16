@@ -49,6 +49,18 @@ class PortType(IntEnum):
     COMBO = 2
     SFP = 3
 
+class GatewayPortType(IntEnum):
+    """Known types of gateway port."""
+    WAN = 0
+    WAN_LAN = 1
+    LAN = 2
+    SFP_WAN = 3
+
+class GatewayPortMode(IntEnum):
+    """Modes of gateway port."""
+    DISABLED = -1
+    WAN = 0
+    LAN = 1
 
 class LinkStatus(IntEnum):
     """Known link statuses."""

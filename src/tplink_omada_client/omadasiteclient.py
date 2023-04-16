@@ -7,6 +7,7 @@ from .devices import (
     OmadaAccessPoint,
     OmadaDevice,
     OmadaFirmwareUpdate,
+    OmadaGateway,
     OmadaListDevice,
     OmadaPortProfile,
     OmadaSwitch,
@@ -317,3 +318,33 @@ class OmadaSiteClient:
         )
 
         return True
+
+    async def get_gateways(self) -> List[OmadaGateway]:
+        """Get the list of gateways (routers) on the site. (Zero or one!)"""
+
+        return [
+            await self.get_gateway(d)
+            for d in await self.get_devices()
+            if d.type == "gateway"
+        ]
+
+    async def get_gateway(self, mac_or_device: Union[str, OmadaDevice, None]) -> OmadaGateway:
+        """Get the gatway (router) for the site by Mac address or Omada device. (There can be only one!)"""
+
+        if mac_or_device is None:
+            mac_or_device = next((d for d in await self.get_devices() if d.type == "gateway"), None)
+            if mac_or_device is None:
+                raise InvalidDevice("No gateways found in site")
+
+        if isinstance(mac_or_device, OmadaDevice):
+            if mac_or_device.type != "gateway":
+                raise InvalidDevice()
+            mac = mac_or_device.mac
+        else:
+            mac = mac_or_device
+
+        result = await self._api.request(
+            "get", self._api.format_url(f"gateways/{mac}", self._site_id)
+        )
+
+        return OmadaGateway(result)

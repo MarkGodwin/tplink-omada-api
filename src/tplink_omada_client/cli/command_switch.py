@@ -16,6 +16,7 @@ async def command_switch(args) -> int:
         switch = await site_client.get_switch(mac)
         print(f"Name: {switch.name}")
         print(f"Address: {switch.mac} ({switch.ip_address})")
+        print(f"Status: {switch.status.name} ({switch.status_category.name})")
         print(f"Ports: {switch.number_of_ports}")
         print(f"Supports PoE: {switch.device_capabilities.supports_poe}")
         if switch.device_capabilities.supports_poe:
