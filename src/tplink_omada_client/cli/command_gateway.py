@@ -45,13 +45,13 @@ def arg_parser(subparsers) -> None:
     """Configures arguments parser for 'gateway' command"""
     switch_parser: ArgumentParser = subparsers.add_parser(
         "gateway",
-        help="Shows details about the specified switch"
+        help="Shows details about the site's gateway"
     )
     switch_parser.set_defaults(func=command_gateway)
 
     switch_parser.add_argument(
         "--mac",
-        help="The MAC address or name of the gateway",
+        help="The MAC address of the gateway (optional)",
         required=False
     )
     switch_parser.add_argument('-d', '--dump', help="Output raw device information",  action='store_true')
