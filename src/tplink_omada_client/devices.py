@@ -3,12 +3,15 @@ Definitions for Omada device objects
 
 APs, Switches and Routers
 """
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Union
 from .definitions import (
     BandwidthControl,
     DeviceStatus,
     DeviceStatusCategory,
     Eth802Dot1X,
+    GatewayPortMode,
+    GatewayPortType,
+    LinkDuplex,
     LinkSpeed,
     LinkStatus,
     PoEMode,
@@ -55,12 +58,12 @@ class OmadaDevice(OmadaApiData):
     @property
     def status(self) -> DeviceStatus:
         """The status of the device."""
-        return self._data["status"]
+        return DeviceStatus(self._data["status"])
 
     @property
     def status_category(self) -> DeviceStatusCategory:
         """The high-level status of the device."""
-        return self._data["statusCategory"]
+        return DeviceStatusCategory(self._data["statusCategory"])
 
     @property
     def ip_address(self) -> str:
@@ -71,6 +74,14 @@ class OmadaDevice(OmadaApiData):
     def display_uptime(self) -> str:
         """Uptime of the device, as a display string"""
         return self._data["uptime"]
+
+    @property
+    def cpu_usage(self) -> int:
+        return self._data["cpuUtil"]
+        
+    @property
+    def mem_usage(self) -> int:
+        return self._data["memUtil"]
 
     @property
     def uptime(self) -> int:
@@ -145,12 +156,12 @@ class OmadaPortStatus(OmadaApiData):
     @property
     def link_status(self) -> LinkStatus:
         """Port's link status."""
-        return self._data["linkStatus"]
+        return LinkStatus(self._data["linkStatus"])
 
     @property
     def link_speed(self) -> LinkSpeed:
         """Port's link speed."""
-        return self._data["linkSpeed"]
+        return LinkSpeed(self._data["linkSpeed"])
 
     @property
     def poe_active(self) -> bool:
@@ -367,7 +378,7 @@ class OmadaSwitchPortDetails(OmadaSwitchPort):
     @property
     def max_speed(self) -> LinkSpeed:
         """The max speed of the port."""
-        return self._data["maxSpeed"]
+        return LinkSpeed(self._data["maxSpeed"])
 
     @property
     def profile_name(self) -> str:
@@ -387,7 +398,7 @@ class OmadaSwitchPortDetails(OmadaSwitchPort):
     @property
     def bandwidth_limit_mode(self) -> BandwidthControl:
         """Type of bandwidth control applied."""
-        return self._data["bandWidthCtrlType"]
+        return BandwidthControl(self._data["bandWidthCtrlType"])
 
     # "bandCtrl": {
     #     "egressEnable": false,
@@ -411,7 +422,7 @@ class OmadaSwitchPortDetails(OmadaSwitchPort):
     @property
     def eth_802_1x_control(self) -> Eth802Dot1X:
         """802.1x Auth mode"""
-        return self._data["dot1x"]
+        return Eth802Dot1X(self._data["dot1x"])
 
     @property
     def lldp_med_enabled(self) -> bool:
@@ -460,17 +471,17 @@ class OmadaPortProfile(OmadaApiData):
     @property
     def poe_mode(self) -> PoEMode:
         """PoE mode."""
-        return self._data["poe"]
+        return PoEMode(self._data["poe"])
 
     @property
     def bandwidth_limit_mode(self) -> BandwidthControl:
         """Type of bandwidth control applied."""
-        return self._data["bandWidthCtrlType"]
+        return BandwidthControl(self._data["bandWidthCtrlType"])
 
     @property
     def eth_802_1x_control(self) -> Eth802Dot1X:
         """802.1x Auth mode"""
-        return self._data["dot1x"]
+        return Eth802Dot1X(self._data["dot1x"])
 
     @property
     def lldp_med_enabled(self) -> bool:
@@ -524,3 +535,129 @@ class OmadaFirmwareUpdate(OmadaApiData):
     def release_notes(self) -> str:
         """Release notes for the new firmware."""
         return self._data["fwReleaseLog"]
+
+class OmadaGatewayPort(OmadaApiData):
+
+    
+    @property
+    def port_number(self) -> int:
+        return self._data["port"]
+
+    @property
+    def name(self) -> str:
+        """Port name"""
+        return self._data["name"]
+
+    @property
+    def type(self) -> GatewayPortType:
+        """Type of the port - SFP, WAN, WAN/LAN or LAN only."""
+        return GatewayPortType(self._data["type"])
+
+    @property
+    def mode(self) -> GatewayPortMode:
+        """Whether the port is operating in WAN or LAN mode"""
+        return GatewayPortMode(self._data["mode"])
+
+    @property
+    def link_status(self) -> LinkStatus:
+        """Low level connectivity status of the link."""
+        # Defined differently to switches, so mangle the values to match
+        return LinkStatus.LINK_UP if self._data["status"] == 1 else LinkStatus.LINK_DOWN
+
+    @property
+    def wan_connected(self) -> bool:
+        """True if the port is connected to the internet/WAN"""
+        return self._data.get("internetState", 0) != 0
+
+    @property
+    def ip(self) -> Union[str, None]:
+        """The WAN IP of the port (for WAN ports only)"""
+        return self._data.get("ip")
+
+    @property
+    def link_speed(self) -> LinkSpeed:
+        """The established link speed of the port"""
+        return LinkSpeed(self._data.get("speed", LinkSpeed.SPEED_10_MBPS))
+
+    @property
+    def link_duplex(self) -> LinkDuplex:
+        """Actual duplex mode of the port"""
+        return LinkDuplex(self._data.get("duplex", LinkDuplex.FULL))
+
+    @property
+    def wan_protocol(self) -> Union[str, None]:
+        """May be: static, dhcp, pppoe, l2tp, pptp """
+        return self._data.get("proto")
+
+    # For connected ports
+    #"rxPkt":217028151,"rxPktRate":35,"rxRate":6,"tx":15157457326,"txPkt":60843861,"txPktRate":24,"txRate":5,
+    # "mirroredPorts":[]
+
+    # FOR WAN PORTS:
+    # "wanPortIpv6Config":{"enable":0,"addr":"","gateway":"","priDns":"","sndDns":"","internetState":0},
+    # "wanPortIpv4Config":{"ip":"x.x.x.x","gateway":"x.x.x.x","gateway2":"0.0.0.0","priDns":"194.168.4.100","sndDns":"194.168.8.100","priDns2":"0.0.0.0","sndDns2":"0.0.0.0"}
+
+
+class OmadaGatewayPortConfig(OmadaApiData):
+    @property
+    def port_number(self) -> int:
+        """Port number"""
+        return self._data["port"]
+
+    @property
+    def duplex(self) -> LinkDuplex:
+        """Configured duplex mode for the port."""
+        return self._data.get("duplex", LinkDuplex.AUTO)
+
+    @property
+    def link_speed(self) -> LinkSpeed:
+        """Configured link speed for the port."""
+        return self._data.get("linkSpeed", LinkSpeed.SPEED_AUTO)
+
+    @property
+    def mirror_enable(self) -> bool:
+        """True if port mirroring is enabled"""
+        return self._data.get("mirrorEnable", False)
+
+    @property
+    def port_status(self) -> OmadaGatewayPort:
+        """Full status of the port"""
+        return OmadaGatewayPort(self._data["portStat"])
+
+class OmadaGateway(OmadaDevice):
+
+    @property
+    def number_of_ports(self) -> int:
+        """The number of ports on the switch."""
+        return self._data.get("portNum", 0)
+
+    @property
+    def supports_poe(self) -> bool:
+        """True if the device supports PoE."""
+        return self._data["supportPoe"]
+
+    @property
+    def ip(self) -> str:
+        """Gateway's LAN IP address."""
+        return self._data["ip"]
+        
+    @property
+    def port_status(self) -> List[OmadaGatewayPort]:
+        """Status of the gateway's ports."""
+        return [
+            OmadaGatewayPort(p) for p in self._data["portStats"]
+        ]
+
+    @property 
+    def port_configs(self) -> List[OmadaGatewayPortConfig]:
+        """Configuration of the gateway's ports. Also includes status..."""
+        return [
+            OmadaGatewayPortConfig(p) for p in self._data["portConfigs"]
+        ]
+
+    @property
+    def is_combined_gateway(self) -> bool:
+        """True if this is a combined gateway/switch."""
+        return self._data.get("combinedGateway", False)
+
+

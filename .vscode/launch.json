@@ -35,6 +35,15 @@
             "module": "tplink_omada_client.cli",
             "justMyCode": true,
             "args": ["switch", "Main Switch", "--dump"]
+        },
+        {
+            "name": "CLI: Get Gateway",
+            "type": "python",
+            "request": "launch",
+            "module": "tplink_omada_client.cli",
+            "justMyCode": true,
+            "args": ["gateway", "--dump"]
         }
+
     ]
 }
