@@ -32,5 +32,5 @@ async def get_mac(site_client: OmadaSiteClient, mac_or_name: str) -> str:
 def dump_raw_data(args: dict[str, Any], data: OmadaApiData):
     if args['dump']:
         print("--- BEGIN RAW DATA ---")
-        print(json.dumps(data.raw_data, indent=2))
+        print(json.dumps(data.raw_data, indent=2,ensure_ascii=False))
         print("---  END RAW DATA  ---")

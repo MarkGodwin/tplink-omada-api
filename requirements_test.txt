@@ -5,6 +5,5 @@
 # types-* that have versions roughly corresponding to the packages they
 # contain hints for available should be kept in sync with them
 
--c ./package_constraints.txt
 coverage==6.4.4
 pytest-aiohttp==0.3.0
