@@ -56,7 +56,7 @@ def set_target_config(name: str, config: ControllerConfig, set_default: bool) ->
     config_parser.set(stored_name, "password", config.password)
     config_parser.set(stored_name, "site", config.site)
     if set_default:
-        if not config_parser[_CLI_SECTION]:
+        if _CLI_SECTION not in config_parser:
             config_parser[_CLI_SECTION] = {}
         config_parser[_CLI_SECTION][_DEFAULT_TARGET] = name
 

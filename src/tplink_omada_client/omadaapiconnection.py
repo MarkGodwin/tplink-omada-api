@@ -7,6 +7,7 @@ import re
 from urllib.parse import urlsplit, urljoin
 from aiohttp import client_exceptions, CookieJar
 from aiohttp.client import ClientSession
+from awesomeversion  import AwesomeVersion
 
 from .exceptions import (
     BadControllerUrl,
@@ -93,8 +94,7 @@ class OmadaApiConnection:
 
         version, controller_id = await self._get_controller_info()
 
-        # Alphabetical is good enough for now
-        if version < "5.0.0":
+        if AwesomeVersion(version) < AwesomeVersion("5.1.0"):
             raise UnsupportedControllerVersion(self._controller_version)
 
         self._controller_id = controller_id
@@ -175,7 +175,7 @@ class OmadaApiConnection:
 
                 if response.status != 200:
                     if response.content_type == "application/json":
-                        content = await response.json()
+                        content = await response.json(encoding="utf-8")
                         self._check_application_errors(content)
 
                     raise RequestFailed(response.status, "HTTP Request Error")
@@ -184,7 +184,7 @@ class OmadaApiConnection:
                 if response.content_type != "application/json":
                     raise LoginSessionClosed()
 
-                content = await response.json()
+                content = await response.json(encoding="utf-8")
                 self._check_application_errors(content)
 
                 # Unpack response data
