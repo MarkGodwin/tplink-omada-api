@@ -3,6 +3,7 @@ Definitions for Omada device objects
 
 APs, Switches and Routers
 """
+import math
 from typing import Any, List, Optional, Union
 from .definitions import (
     BandwidthControl,
@@ -191,7 +192,7 @@ class OmadaPortStatus(OmadaApiData):
         """Power (W) supplied over PoE."""
         if "poePower" in self._data:
             return self._data["poePower"]
-        return 0.0
+        return math.nan
 
     @property
     def bytes_tx(self) -> int:
