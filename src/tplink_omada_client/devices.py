@@ -71,7 +71,7 @@ class OmadaDevice(OmadaApiData):
         return self._data["ip"]
 
     @property
-    def display_uptime(self) -> str:
+    def display_uptime(self) -> Optional[str]:
         """Uptime of the device, as a display string"""
         if self._data["statusCategory"] == DeviceStatusCategory.CONNECTED:
             return self._data["uptime"]
@@ -83,14 +83,14 @@ class OmadaDevice(OmadaApiData):
         if self._data["statusCategory"] == DeviceStatusCategory.CONNECTED:
             return self._data["cpuUtil"]
         else:
-            return math.nan
+            return 0
         
     @property
     def mem_usage(self) -> int:
         if self._data["statusCategory"] == DeviceStatusCategory.CONNECTED:
             return self._data["memUtil"]
         else:
-            return math.nan
+            return 0
 
     @property
     def uptime(self) -> int:
@@ -98,7 +98,7 @@ class OmadaDevice(OmadaApiData):
         if self._data["statusCategory"] == DeviceStatusCategory.CONNECTED:
             return self._data["uptimeLong"]
         else:
-            return math.nan
+            return 0
 
     @property
     def firmware_version(self) -> str:
@@ -115,7 +115,7 @@ class OmadaListDevice(OmadaDevice):
         if self._data["statusCategory"] == DeviceStatusCategory.CONNECTED:
             return self._data["needUpgrade"]
         else:
-            return None
+            return False
 
     @property
     def fw_download(self) -> bool:
@@ -123,7 +123,7 @@ class OmadaListDevice(OmadaDevice):
         if self._data["statusCategory"] == DeviceStatusCategory.CONNECTED:
             return self._data["fwDownload"]
         else:
-            return None
+            return False
 
 
 class OmadaLink(OmadaApiData):
