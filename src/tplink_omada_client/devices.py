@@ -579,8 +579,7 @@ class OmadaGatewayPort(OmadaApiData):
     @property
     def link_status(self) -> LinkStatus:
         """Low level connectivity status of the link."""
-        # Defined differently to switches, so mangle the values to match
-        return LinkStatus.LINK_UP if self._data["status"] == 1 else LinkStatus.LINK_DOWN
+        return LinkStatus(self._data["status"])
 
     @property
     def wan_connected(self) -> bool:
