@@ -65,8 +65,8 @@ class GatewayPortMode(IntEnum):
 class LinkStatus(IntEnum):
     """Known link statuses."""
 
-    LINK_UP = 0
-    LINK_DOWN = 2
+    LINK_DOWN = 0
+    LINK_UP = 1
 
 
 class LinkSpeed(IntEnum):

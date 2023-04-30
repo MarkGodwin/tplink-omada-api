@@ -73,20 +73,32 @@ class OmadaDevice(OmadaApiData):
     @property
     def display_uptime(self) -> str:
         """Uptime of the device, as a display string"""
-        return self._data["uptime"]
+        if self._data["statusCategory"] == DeviceStatusCategory.CONNECTED:
+            return self._data["uptime"]
+        else:
+            return None
 
     @property
     def cpu_usage(self) -> int:
-        return self._data["cpuUtil"]
+        if self._data["statusCategory"] == DeviceStatusCategory.CONNECTED:
+            return self._data["cpuUtil"]
+        else:
+            return math.nan
         
     @property
     def mem_usage(self) -> int:
-        return self._data["memUtil"]
+        if self._data["statusCategory"] == DeviceStatusCategory.CONNECTED:
+            return self._data["memUtil"]
+        else:
+            return math.nan
 
     @property
     def uptime(self) -> int:
         """Uptime of the device, as a display string"""
-        return self._data["uptimeLong"]
+        if self._data["statusCategory"] == DeviceStatusCategory.CONNECTED:
+            return self._data["uptimeLong"]
+        else:
+            return math.nan
 
     @property
     def firmware_version(self) -> str:
@@ -100,12 +112,18 @@ class OmadaListDevice(OmadaDevice):
     @property
     def need_upgrade(self) -> bool:
         """True, if a firmware upgrade is available for the device."""
-        return self._data["needUpgrade"]
+        if self._data["statusCategory"] == DeviceStatusCategory.CONNECTED:
+            return self._data["needUpgrade"]
+        else:
+            return None
 
     @property
     def fw_download(self) -> bool:
         """True, if a firmware upgrade is being downloaded."""
-        return self._data["fwDownload"]
+        if self._data["statusCategory"] == DeviceStatusCategory.CONNECTED:
+            return self._data["fwDownload"]
+        else:
+            return None
 
 
 class OmadaLink(OmadaApiData):
