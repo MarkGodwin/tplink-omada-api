@@ -100,12 +100,18 @@ class OmadaListDevice(OmadaDevice):
     @property
     def need_upgrade(self) -> bool:
         """True, if a firmware upgrade is available for the device."""
-        return self._data["needUpgrade"]
+        if self._data["statusCategory"] == 1:
+            return self._data["needUpgrade"]
+        else:
+            return None
 
     @property
     def fw_download(self) -> bool:
         """True, if a firmware upgrade is being downloaded."""
-        return self._data["fwDownload"]
+        if self._data["statusCategory"] == 1:
+            return self._data["fwDownload"]
+        else:
+            return None
 
 
 class OmadaLink(OmadaApiData):
