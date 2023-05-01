@@ -3,7 +3,6 @@ Definitions for Omada device objects
 
 APs, Switches and Routers
 """
-import math
 from typing import Any, List, Optional, Union
 from .definitions import (
     BandwidthControl,
@@ -18,6 +17,7 @@ from .definitions import (
     PoEMode,
     PortType,
 )
+
 
 class OmadaApiData:
     def __init__(self, data: dict[str, Any]):
@@ -192,7 +192,7 @@ class OmadaPortStatus(OmadaApiData):
         """Power (W) supplied over PoE."""
         if "poePower" in self._data:
             return self._data["poePower"]
-        return math.nan
+        return None
 
     @property
     def bytes_tx(self) -> int:
