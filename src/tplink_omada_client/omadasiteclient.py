@@ -143,7 +143,7 @@ class OmadaSiteClient:
     async def get_switch_ports(
         self, mac_or_device: Union[str, OmadaDevice]
     ) -> List[OmadaSwitchPortDetails]:
-        """Get a switch by Mac address or Omada device."""
+        """Get ports of a switch by Mac address or Omada device."""
 
         if isinstance(mac_or_device, OmadaDevice):
             if mac_or_device.type != "switch":
@@ -163,7 +163,8 @@ class OmadaSiteClient:
         mac_or_device: Union[str, OmadaDevice],
         index_or_port: Union[int, OmadaSwitchPort],
     ) -> OmadaSwitchPortDetails:
-        """Get a switch by Mac address or Omada device."""
+        """Get a single port of a switch by Mac address or Omada device,
+            and port number or port object of OmadaSwitch device."""
 
         if isinstance(mac_or_device, OmadaDevice):
             if mac_or_device.type != "switch":
@@ -182,6 +183,46 @@ class OmadaSiteClient:
         )
 
         return OmadaSwitchPortDetails(result)
+
+    async def get_switch_port_overrides(
+        self,
+        mac_or_device: Union[str, OmadaDevice],
+        index_or_port: Union[int, OmadaSwitchPort],
+    ) -> SwitchPortOverrides:
+        """Return the current override settings for the port of a switch, or the current profile settings as default."""
+
+        port = await self.get_switch_port(mac_or_device, index_or_port)
+
+        # Returns the current overrides
+        if port.has_profile_override:
+            return SwitchPortOverrides(
+                    enable_poe=(port.poe_mode == PoEMode.ENABLED),
+                    dot1x_mode=port.eth_802_1x_control,
+                    duplex=port.duplex,
+                    link_speed=port.link_speed,
+                    lldp_med_enable=port.lldp_med_enabled,
+                    loopback_detect=port.loopback_detect_enabled,
+                    spanning_tree_enable=port.spanning_tree_enabled,
+                    port_isolation=port.port_isolation_enabled
+            )
+
+        # Otherwise the profile's config values are returned
+        profiles = await self.get_port_profiles()
+        prof = next((p for p in profiles if p.profile_id == port.profile_id), None)
+        # The API doesn't provide the PoE mode of the switch (couldn't even find in Omada
+        # GUI how to set the PoE mode of a switch). Thus, use True as a default value.
+        poe_mode = (prof.poe_mode != PoEMode.DISABLED)
+
+        return SwitchPortOverrides(
+                enable_poe=poe_mode,
+                dot1x_mode=prof.eth_802_1x_control,
+                duplex=LinkDuplex.AUTO,
+                link_speed=LinkSpeed.SPEED_AUTO,
+                lldp_med_enable=prof.lldp_med_enabled,
+                loopback_detect=prof.loopback_detect_enabled,
+                spanning_tree_enable=prof.spanning_tree_enabled,
+                port_isolation=prof.port_isolation_enabled
+        )
 
     async def update_access_point_port(
         self,

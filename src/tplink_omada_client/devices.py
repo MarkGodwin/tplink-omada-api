@@ -84,7 +84,7 @@ class OmadaDevice(OmadaApiData):
             return self._data["cpuUtil"]
         else:
             return 0
-        
+
     @property
     def mem_usage(self) -> int:
         if self._data["statusCategory"] == DeviceStatusCategory.CONNECTED:
@@ -399,6 +399,16 @@ class OmadaSwitchPortDetails(OmadaSwitchPort):
         return LinkSpeed(self._data["maxSpeed"])
 
     @property
+    def link_speed(self) -> LinkSpeed:
+        """The link speed of the port."""
+        return LinkSpeed(self._data["linkSpeed"])
+
+    @property
+    def duplex(self) -> LinkDuplex:
+        """The link duplex state of the port."""
+        return LinkDuplex(self._data['duplex'])
+
+    @property
     def profile_name(self) -> str:
         """Name of the port's config profile"""
         return self._data["profileName"]
@@ -556,7 +566,7 @@ class OmadaFirmwareUpdate(OmadaApiData):
 
 class OmadaGatewayPort(OmadaApiData):
 
-    
+
     @property
     def port_number(self) -> int:
         return self._data["port"]
@@ -657,7 +667,7 @@ class OmadaGateway(OmadaDevice):
     def ip(self) -> str:
         """Gateway's LAN IP address."""
         return self._data["ip"]
-        
+
     @property
     def port_status(self) -> List[OmadaGatewayPort]:
         """Status of the gateway's ports."""
@@ -665,7 +675,7 @@ class OmadaGateway(OmadaDevice):
             OmadaGatewayPort(p) for p in self._data["portStats"]
         ]
 
-    @property 
+    @property
     def port_configs(self) -> List[OmadaGatewayPortConfig]:
         """Configuration of the gateway's ports. Also includes status..."""
         return [
