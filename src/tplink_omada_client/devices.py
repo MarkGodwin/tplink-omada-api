@@ -18,6 +18,7 @@ from .definitions import (
     PortType,
 )
 
+
 class OmadaApiData:
     def __init__(self, data: dict[str, Any]):
         self._data = data
@@ -187,11 +188,9 @@ class OmadaPortStatus(OmadaApiData):
         return self._data["poe"]
 
     @property
-    def poe_power(self) -> float:
+    def poe_power(self) -> Optional[float]:
         """Power (W) supplied over PoE."""
-        if "poePower" in self._data:
-            return self._data["poePower"]
-        return 0.0
+        return self._data.get("poePower")
 
     @property
     def bytes_tx(self) -> int:
