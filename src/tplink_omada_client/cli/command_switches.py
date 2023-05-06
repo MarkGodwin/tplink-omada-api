@@ -3,7 +3,7 @@
 from argparse import _SubParsersAction
 
 from .config import get_target_config, to_omada_connection
-from .util import dump_raw_data, get_target_argument
+from .util import dump_raw_data, get_link_status_char, get_power_char, get_target_argument
 
 async def command_switches(args) -> int:
     """Executes 'switches' command"""
@@ -17,17 +17,12 @@ async def command_switches(args) -> int:
             for port in switch.ports:
                 if port.is_disabled:
                     print("x", end="")
-                elif port.port_status.link_status:
-                    print("\u2611", end="")
                 else:
-                    print("\u2610", end="")
-                if port.port_status.poe_active:
-                    print("\u26a1", end="")
-                else:
-                    print("  ", end="")
+                    print(get_link_status_char(port.port_status.link_status), end="")
+                print(get_power_char(port.port_status.poe_active), end="")
 
-            dump_raw_data(args, switch)
             print()
+            dump_raw_data(args, switch)
     return 0
 
 def arg_parser(subparsers: _SubParsersAction) -> None:

@@ -5,7 +5,7 @@ from argparse import ArgumentParser
 from tplink_omada_client.definitions import GatewayPortMode, LinkStatus
 
 from .config import get_target_config, to_omada_connection
-from .util import dump_raw_data, get_mac, get_target_argument
+from .util import dump_raw_data, get_link_status_char, get_mac, get_target_argument
 
 async def command_gateway(args) -> int:
     """Executes 'gateway' command"""
@@ -34,8 +34,7 @@ async def command_gateway(args) -> int:
             print('\u2611' if p.wan_connected else '\u2610')
         print("LAN Ports:")
         for p in lan_ports:
-            print(f"    Port: {p.port_number:>2} {p.type.name:7} ", end="")
-            print('\u2611' if p.link_status == LinkStatus.LINK_UP else '\u2610')
+            print(f"    Port: {p.port_number:>2} {p.type.name:7} {get_link_status_char(p.link_status)}")
 
         dump_raw_data(args, gateway)
 

@@ -13,7 +13,8 @@ from . import (
     command_target,
     command_targets,
     command_default,
-    command_gateway
+    command_gateway,
+    command_switch_ports
 )
 
 def main(argv: Union[Sequence[str], None] = None) -> int:
@@ -35,6 +36,7 @@ def main(argv: Union[Sequence[str], None] = None) -> int:
     command_devices.arg_parser(subparsers)
     command_switch.arg_parser(subparsers)
     command_switches.arg_parser(subparsers)
+    command_switch_ports.arg_parser(subparsers)
     command_target.arg_parser(subparsers)
     command_targets.arg_parser(subparsers)
     command_default.arg_parser(subparsers)

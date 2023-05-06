@@ -37,6 +37,14 @@
             "args": ["switch", "Main Switch", "--dump"]
         },
         {
+            "name": "CLI: Get Switch Ports",
+            "type": "python",
+            "request": "launch",
+            "module": "tplink_omada_client.cli",
+            "justMyCode": true,
+            "args": ["switch_ports", "Main Switch", "-t", "-p", "5"]
+        },
+        {
             "name": "CLI: Get Gateway",
             "type": "python",
             "request": "launch",
