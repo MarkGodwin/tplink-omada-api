@@ -5,6 +5,7 @@ import json
 from typing import Any
 from re import IGNORECASE, match
 from tplink_omada_client.devices import OmadaApiData
+from tplink_omada_client.definitions import LinkStatus
 from tplink_omada_client.omadasiteclient import OmadaSiteClient
 
 TARGET_ARG: str = "target"
@@ -34,3 +35,21 @@ def dump_raw_data(args: dict[str, Any], data: OmadaApiData):
         print("--- BEGIN RAW DATA ---")
         print(json.dumps(data.raw_data, indent=2,ensure_ascii=False))
         print("---  END RAW DATA  ---")
+
+def get_checkbox_char(checked: bool) -> str:
+    """ Returns a checkbox char. """
+    if checked:
+        return "\u2611"
+    else:
+        return "\u2610"
+
+def get_link_status_char(link_status: LinkStatus) -> str:
+    """ Returns a checkbox char representing the link status. """
+    return get_checkbox_char( link_status == LinkStatus.LINK_UP)
+
+def get_power_char(power: bool) -> str:
+    """ Returns a high-voltage symbol if true. """
+    if power:
+        return "\u26a1"
+    else:
+        return "  "

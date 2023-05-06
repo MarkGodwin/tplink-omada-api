@@ -106,6 +106,7 @@ class BandwidthControl(IntEnum):
 class PoEMode(IntEnum):
     """Settings for PoE policy."""
 
+    NONE = -1
     DISABLED = 0
     ENABLED = 1
     USE_DEVICE_SETTINGS = 2

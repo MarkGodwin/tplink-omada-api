@@ -411,7 +411,7 @@ class OmadaSwitchPortDetails(OmadaSwitchPort):
     @property
     def poe_mode(self) -> PoEMode:
         """PoE config for this port."""
-        return self._data["poe"]
+        return PoEMode(self._data.get("poe", PoEMode.NONE))
 
     @property
     def bandwidth_limit_mode(self) -> BandwidthControl:
@@ -489,7 +489,7 @@ class OmadaPortProfile(OmadaApiData):
     @property
     def poe_mode(self) -> PoEMode:
         """PoE mode."""
-        return PoEMode(self._data["poe"])
+        return PoEMode(self._data.get("poe", PoEMode.NONE))
 
     @property
     def bandwidth_limit_mode(self) -> BandwidthControl:
