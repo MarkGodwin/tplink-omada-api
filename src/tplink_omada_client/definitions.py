@@ -1,7 +1,28 @@
 """ Definitions for Omada enums. """
 
+from abc import ABC
 from enum import IntEnum
+from typing import Any
 
+class OmadaApiData(ABC):
+    def __init__(self, data: dict[str, Any]):
+        self._data = data
+
+    def __repr__(self) -> str:
+        repr = self.__class__.__name__
+        repr += "{"
+        for name in self.__dir__():
+            if (
+                not name.startswith("_")
+                and name != "raw_data"
+            ):
+                repr += f"{name}={getattr(self, name)},"
+        repr += "}"
+        return repr
+
+    @property
+    def raw_data(self) -> dict[str, Any]:
+        return self._data
 
 class DeviceStatus(IntEnum):
     """Known status codes for devices."""
@@ -110,3 +131,34 @@ class PoEMode(IntEnum):
     DISABLED = 0
     ENABLED = 1
     USE_DEVICE_SETTINGS = 2
+
+class AuthenticationStatus:
+    """ Client authentication status. """
+    CONNECTED = 0
+    PENDING = 1
+    AUTHORIZED = 2
+    AUTH_FREE = 3
+
+class ConnectType(IntEnum):
+    """ Client connection types. """
+    GUEST_WIRELESS = 0
+    WIRELESS = 1
+    WIRED = 2
+
+class RadioId(IntEnum):
+    """ WiFi radio frequencies """
+    FREQ_2_4 = 0
+    FREQ_5_1 = 1
+    FREQ_5_2 = 2
+    FREQ_6   = 3
+
+class WifiMode(IntEnum):
+    """ WiFi modes. """
+    A   = 0
+    B   = 1
+    G   = 2
+    NA  = 3
+    NG  = 4
+    AC  = 5
+    AXA = 6
+    AXG = 7

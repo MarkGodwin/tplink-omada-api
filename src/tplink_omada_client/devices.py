@@ -14,19 +14,10 @@ from .definitions import (
     LinkDuplex,
     LinkSpeed,
     LinkStatus,
+    OmadaApiData,
     PoEMode,
     PortType,
 )
-
-
-class OmadaApiData:
-    def __init__(self, data: dict[str, Any]):
-        self._data = data
-
-    @property
-    def raw_data(self) -> dict[str, Any]:
-        return self._data
-
 
 class OmadaDevice(OmadaApiData):
     """Details of a device connected to the controller"""

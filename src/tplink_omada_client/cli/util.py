@@ -19,7 +19,18 @@ def assert_target_argument(args: dict[str, Any]) -> str:
 def get_target_argument(args: dict[str, Any]) -> str:
     return args[TARGET_ARG]
 
-async def get_mac(site_client: OmadaSiteClient, mac_or_name: str) -> str:
+async def get_client_mac(site_client: OmadaSiteClient, mac_or_name: str) -> str:
+    if match('([0-9A-F]{2}[-]){5}[0-9A-F]{2}$',
+        string=mac_or_name,
+        flags=IGNORECASE):
+        return mac_or_name
+
+    async for client in site_client.get_known_clients():
+        if client.name == mac_or_name:
+            return client.mac
+    raise argparse.ArgumentError(None, f"Client with name {mac_or_name} not found")
+
+async def get_device_mac(site_client: OmadaSiteClient, mac_or_name: str) -> str:
     if match('([0-9A-F]{2}[-]){5}[0-9A-F]{2}$',
         string=mac_or_name,
         flags=IGNORECASE):

@@ -7,14 +7,19 @@ from typing import Any, Sequence, Union
 from tplink_omada_client.exceptions import LoginFailed
 
 from . import (
+    command_block_client,
+    command_client,
+    command_clients,
+    command_default,
     command_devices,
+    command_known_clients,
+    command_gateway,
     command_switch,
     command_switches,
     command_target,
     command_targets,
-    command_default,
-    command_gateway,
-    command_switch_ports
+    command_switch_ports,
+    command_unblock_client,
 )
 
 def main(argv: Union[Sequence[str], None] = None) -> int:
@@ -33,14 +38,19 @@ def main(argv: Union[Sequence[str], None] = None) -> int:
         metavar='command',
     )
 
+    command_block_client.arg_parser(subparsers)
+    command_client.arg_parser(subparsers)
+    command_clients.arg_parser(subparsers)
+    command_default.arg_parser(subparsers)
     command_devices.arg_parser(subparsers)
+    command_gateway.arg_parser(subparsers)
+    command_known_clients.arg_parser(subparsers)
     command_switch.arg_parser(subparsers)
     command_switches.arg_parser(subparsers)
     command_switch_ports.arg_parser(subparsers)
     command_target.arg_parser(subparsers)
     command_targets.arg_parser(subparsers)
-    command_default.arg_parser(subparsers)
-    command_gateway.arg_parser(subparsers)
+    command_unblock_client.arg_parser(subparsers)
 
     try:
         args = parser.parse_args(args=argv)

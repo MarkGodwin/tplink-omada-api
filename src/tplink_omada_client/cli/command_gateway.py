@@ -5,7 +5,7 @@ from argparse import ArgumentParser
 from tplink_omada_client.definitions import GatewayPortMode, LinkStatus
 
 from .config import get_target_config, to_omada_connection
-from .util import dump_raw_data, get_link_status_char, get_mac, get_target_argument
+from .util import dump_raw_data, get_link_status_char, get_device_mac, get_target_argument
 
 async def command_gateway(args) -> int:
     """Executes 'gateway' command"""
@@ -16,7 +16,7 @@ async def command_gateway(args) -> int:
         site_client = await client.get_site_client(config.site)
         mac = args['mac']
         if mac:
-            mac = await get_mac(site_client, mac)
+            mac = await get_device_mac(site_client, mac)
         gateway = await site_client.get_gateway(mac)
         print(f"Name: {gateway.name}")
         print(f"Address: {gateway.mac} ({gateway.ip_address})")
