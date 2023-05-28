@@ -7,7 +7,7 @@ from tplink_omada_client.definitions import LinkStatus, PoEMode, PortType
 from tplink_omada_client.devices import OmadaSwitch, OmadaSwitchPortDetails
 
 from .config import get_target_config, to_omada_connection
-from .util import dump_raw_data, get_checkbox_char, get_link_status_char, get_mac, get_power_char, get_target_argument
+from .util import dump_raw_data, get_checkbox_char, get_link_status_char, get_device_mac, get_power_char, get_target_argument
 
 async def command_switch_ports(args) -> int:
     """Executes 'switch_ports' command"""
@@ -16,7 +16,7 @@ async def command_switch_ports(args) -> int:
 
     async with to_omada_connection(config) as client:
         site_client = await client.get_site_client(config.site)
-        mac = await get_mac(site_client, args['mac'])
+        mac = await get_device_mac(site_client, args['mac'])
         switch = await site_client.get_switch(mac)
         ports = await site_client.get_switch_ports(mac)
 

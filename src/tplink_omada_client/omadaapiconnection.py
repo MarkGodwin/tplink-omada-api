@@ -1,7 +1,7 @@
 """Internal Omada API client."""
 
 import time
-from typing import Any, Optional, Tuple
+from typing import Any, AsyncIterable, Optional, Tuple
 
 import re
 from urllib.parse import urlsplit, urljoin
@@ -18,6 +18,8 @@ from .exceptions import (
     UnsupportedControllerVersion,
 )
 
+
+_PAGE_SIZE: int = 100
 
 class OmadaApiConnection:
     """Low level Omada API client."""
@@ -141,6 +143,29 @@ class OmadaApiConnection:
             end_point = f"sites/{site}/{end_point}"
 
         return urljoin(self._url, f"/{self._controller_id}/api/v2/{end_point}")
+
+    async def iterate_pages(self, url: str, params: Optional[dict[str, Any]]=None) -> AsyncIterable[dict[str, Any]]:
+        """Iterates all the entries of a paged endpoint"""
+        request_params = {}
+        if params is not None:
+            request_params.update(params)
+        request_params["currentPageSize"] = _PAGE_SIZE
+
+        current_page = 1
+        has_next = True
+        while has_next:
+            request_params["currentPage"] = current_page
+            response = await self.request("get", url, request_params)
+            
+            # Setup next page request
+            current_page = int(response['currentPage']) + 1
+            current_size = int(response['currentSize'])
+            total_rows = int(response['totalRows'])
+            has_next = total_rows > current_page * current_size
+
+            data: list[dict[str, Any]] = response['data']
+            for item in data:
+                yield item
 
     async def request(self, method: str, url: str, params=None, payload=None) -> Any:
         """Perform a request specific to the controlller, with authentication"""

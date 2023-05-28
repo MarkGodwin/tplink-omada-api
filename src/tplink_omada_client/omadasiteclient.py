@@ -1,8 +1,17 @@
 """Client for Omada Site requests."""
 
-from typing import List, Optional, Union
-from .omadaapiconnection import OmadaApiConnection
+from typing import Any, AsyncIterable, List, Optional, Union
 
+from .clients import (
+    OmadaClientDetails,
+    OmadaConnectedClient,
+    OmadaNetworkClient,
+    OmadaWiredClient,
+    OmadaWiredClientDetails,
+    OmadaWirelessClient,
+    OmadaWirelessClientDetails,
+)
+from .definitions import BandwidthControl, Eth802Dot1X, LinkDuplex, LinkSpeed, PoEMode
 from .devices import (
     OmadaAccessPoint,
     OmadaDevice,
@@ -15,12 +24,10 @@ from .devices import (
     OmadaSwitchPortDetails,
     OmadaAccesPointLanPortSettings,
 )
-
 from .exceptions import (
     InvalidDevice,
 )
-
-from .definitions import BandwidthControl, Eth802Dot1X, LinkDuplex, LinkSpeed, PoEMode
+from .omadaapiconnection import OmadaApiConnection
 
 
 class SwitchPortOverrides:
@@ -78,6 +85,56 @@ class OmadaSiteClient:
     def __init__(self, site_id: str, api: OmadaApiConnection):
         self._api = api
         self._site_id = site_id
+
+    async def block_client(self, mac_or_client: Union[str, OmadaNetworkClient]) -> None:
+        if isinstance(mac_or_client, OmadaConnectedClient):
+            mac = mac_or_client.mac
+        else:
+            mac = mac_or_client
+        await self._api.request(
+            "post", self._api.format_url(f"cmd/clients/{mac}/block", self._site_id)
+        )
+
+    async def unblock_client(self, mac_or_client: Union[str, OmadaNetworkClient]) -> None:
+        if isinstance(mac_or_client, OmadaConnectedClient):
+            mac = mac_or_client.mac
+        else:
+            mac = mac_or_client
+        await self._api.request(
+            "post", self._api.format_url(f"cmd/clients/{mac}/unblock", self._site_id)
+        )
+
+    async def get_client(self, mac_or_client: Union[str, OmadaNetworkClient]) -> OmadaClientDetails:
+        """Get the details of a client"""
+        if isinstance(mac_or_client, OmadaConnectedClient):
+            mac = mac_or_client.mac
+        else:
+            mac = mac_or_client
+
+        result = await self._api.request(
+            "get", self._api.format_url(f"clients/{mac}", self._site_id)
+        )
+
+        if result.get("wireless"):
+            return OmadaWirelessClientDetails(result)
+        else:
+            return OmadaWiredClientDetails(result)
+
+    async def get_connected_clients(self) -> AsyncIterable[OmadaConnectedClient]:
+        """Get the clients connected to the site network."""
+        async for client in self._api.iterate_pages(self._api.format_url("clients", self._site_id)):
+            if client["wireless"]:
+                yield OmadaWirelessClient(client)
+            else:
+                yield OmadaWiredClient(client)
+
+    async def get_known_clients(self) -> AsyncIterable[OmadaNetworkClient]:
+        """Get the clients connected to the site network."""
+        async for client in self._api.iterate_pages(self._api.format_url("insight/clients", self._site_id)):
+            if client["wireless"]:
+                yield OmadaWirelessClient(client)
+            else:
+                yield OmadaWiredClient(client)
 
     async def get_devices(self) -> List[OmadaListDevice]:
         """Get the list of devices on the site."""
