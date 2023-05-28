@@ -264,8 +264,8 @@ class OmadaSiteClient:
             )
 
         # Otherwise the profile's config values are returned
-        profiles = await self.get_port_profiles()
-        prof = next((p for p in profiles if p.profile_id == port.profile_id), None)
+        prof = await self.get_port_profile(port.profile_id)
+        
         # The API doesn't provide the PoE mode of the switch (couldn't even find in Omada
         # GUI how to set the PoE mode of a switch). Thus, use True as a default value.
         poe_mode = (prof.poe_mode != PoEMode.DISABLED)
@@ -372,6 +372,15 @@ class OmadaSiteClient:
 
         # Read back the new port settings
         return await self.get_switch_port(mac, port)
+
+    async def get_port_profile(self, profile_id: str) -> OmadaPortProfile:
+        profiles = await self.get_port_profiles()
+
+        profile = next((p for p in profiles if p.profile_id == profile_id), None)
+
+        if not profile:
+            raise InvalidDevice(f"Port profile {profile_id} does not exist")
+        return profile        
 
     async def get_port_profiles(self) -> List[OmadaPortProfile]:
         """Lists the available switch port profiles that can be applied."""
