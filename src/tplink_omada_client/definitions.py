@@ -97,7 +97,8 @@ class LinkSpeed(IntEnum):
     SPEED_10_MBPS = 1
     SPEED_100_MBPS = 2
     SPEED_1_GBPS = 3
-    SPEED_10_GBPS = 4
+    SPEED_2_5_GBPS = 4
+    SPEED_10_GBPS = 5
 
 
 class LinkDuplex(IntEnum):
