@@ -105,7 +105,7 @@ class OmadaListDevice(OmadaDevice):
     def need_upgrade(self) -> bool:
         """True, if a firmware upgrade is available for the device."""
         if self._data["statusCategory"] == DeviceStatusCategory.CONNECTED:
-            return self._data["needUpgrade"]
+            return self._data.get("needUpgrade", False)
         else:
             return False
 
@@ -113,7 +113,7 @@ class OmadaListDevice(OmadaDevice):
     def fw_download(self) -> bool:
         """True, if a firmware upgrade is being downloaded."""
         if self._data["statusCategory"] == DeviceStatusCategory.CONNECTED:
-            return self._data["fwDownload"]
+            return self._data.get("fwDownload", False)
         else:
             return False
 
