@@ -11,7 +11,7 @@ from .clients import (
     OmadaWirelessClient,
     OmadaWirelessClientDetails,
 )
-from .definitions import BandwidthControl, Eth802Dot1X, LinkDuplex, LinkSpeed, PoEMode
+from .definitions import BandwidthControl, Eth802Dot1X, LinkDuplex, LinkSpeed, PoEMode, LedSetting
 from .devices import (
     OmadaAccessPoint,
     OmadaDevice,
@@ -265,7 +265,7 @@ class OmadaSiteClient:
 
         # Otherwise the profile's config values are returned
         prof = await self.get_port_profile(port.profile_id)
-        
+
         # The API doesn't provide the PoE mode of the switch (couldn't even find in Omada
         # GUI how to set the PoE mode of a switch). Thus, use True as a default value.
         poe_mode = (prof.poe_mode != PoEMode.DISABLED)
@@ -380,7 +380,7 @@ class OmadaSiteClient:
 
         if not profile:
             raise InvalidDevice(f"Port profile {profile_id} does not exist")
-        return profile        
+        return profile
 
     async def get_port_profiles(self) -> List[OmadaPortProfile]:
         """Lists the available switch port profiles that can be applied."""
@@ -455,3 +455,19 @@ class OmadaSiteClient:
         )
 
         return OmadaGateway(result)
+
+    async def set_led_setting(self, mac_or_device: Union[str, OmadaDevice, None], setting: LedSetting) -> bool:
+        """Sets the onboard LED setting for the device"""
+        if isinstance(mac_or_device, OmadaDevice):
+            mac = mac_or_device.mac
+        else:
+            mac = mac_or_device
+
+        payload = {"mac": mac, "ledSetting": setting.value }
+        await self._api.request(
+            "patch",
+            self._api.format_url(f"eaps/{mac}", self._site_id),
+            payload=payload,
+        )
+
+        return True
