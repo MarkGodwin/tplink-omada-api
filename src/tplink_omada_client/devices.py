@@ -17,6 +17,7 @@ from .definitions import (
     OmadaApiData,
     PoEMode,
     PortType,
+    LedSetting,
 )
 
 class OmadaDevice(OmadaApiData):
@@ -96,6 +97,11 @@ class OmadaDevice(OmadaApiData):
     def firmware_version(self) -> str:
         """Firmware version of the device"""
         return self._data["firmwareVersion"]
+
+    @property
+    def led_setting(self) -> LedSetting:
+        """The onboard LED setting for the device"""
+        return LedSetting(self._data["ledSetting"])
 
 
 class OmadaListDevice(OmadaDevice):

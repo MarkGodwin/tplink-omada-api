@@ -163,3 +163,9 @@ class WifiMode(IntEnum):
     AC  = 5
     AXA = 6
     AXG = 7
+
+class LedSetting(IntEnum):
+    """ LED Setting """
+    OFF           = 0
+    ON            = 1
+    SITE_SETTINGS = 2
