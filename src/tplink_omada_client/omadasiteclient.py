@@ -145,6 +145,11 @@ class OmadaSiteClient:
 
         return [OmadaListDevice(d) for d in result]
 
+    async def get_device(self, mac: str) -> OmadaListDevice:
+        """ Get a single device by mac."""
+        # So wasteful
+        return next(d for d in await self.get_devices() if d.mac == mac)
+
     async def get_switches(self) -> List[OmadaSwitch]:
         """Get the list of switches on the site."""
 
@@ -456,17 +461,17 @@ class OmadaSiteClient:
 
         return OmadaGateway(result)
 
-    async def set_led_setting(self, mac_or_device: Union[str, OmadaDevice, None], setting: LedSetting) -> bool:
+    async def set_led_setting(self, mac_or_device: Union[str, OmadaDevice], setting: LedSetting) -> bool:
         """Sets the onboard LED setting for the device"""
         if isinstance(mac_or_device, OmadaDevice):
-            mac = mac_or_device.mac
+            device = mac_or_device
         else:
-            mac = mac_or_device
+            device = await self.get_device(mac_or_device)
 
-        payload = {"mac": mac, "ledSetting": setting.value }
+        payload = {"mac": device.mac, "ledSetting": setting.value }
         await self._api.request(
             "patch",
-            self._api.format_url(f"eaps/{mac}", self._site_id),
+            self._api.format_url(device.resource_path, self._site_id),
             payload=payload,
         )
 

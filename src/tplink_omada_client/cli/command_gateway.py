@@ -35,6 +35,7 @@ async def command_gateway(args) -> int:
         print("LAN Ports:")
         for p in lan_ports:
             print(f"    Port: {p.port_number:>2} {p.type.name:7} {get_link_status_char(p.link_status)}")
+        print(f"LED Setting: {gateway.led_setting.name}")
 
         dump_raw_data(args, gateway)
 

@@ -3,7 +3,7 @@ Definitions for Omada device objects
 
 APs, Switches and Routers
 """
-from typing import Any, List, Optional, Union
+from typing import List, Optional, Union
 from .definitions import (
     BandwidthControl,
     DeviceStatus,
@@ -27,6 +27,16 @@ class OmadaDevice(OmadaApiData):
     def type(self) -> str:
         """The type of the device. Its value can be "ap", "gateway", and "switch"."""
         return self._data["type"]
+
+    @property
+    def resource_path(self):
+        """The API path for querying detailed data about this device"""
+        types = {
+            "ap": "eaps",
+            "gateway": "gateways",
+            "switch": "switches"
+        }
+        return f"{types[self.type]}/{self.mac}"
 
     @property
     def mac(self) -> str:
@@ -98,11 +108,6 @@ class OmadaDevice(OmadaApiData):
         """Firmware version of the device"""
         return self._data["firmwareVersion"]
 
-    @property
-    def led_setting(self) -> LedSetting:
-        """The onboard LED setting for the device"""
-        return LedSetting(self._data["ledSetting"])
-
 
 class OmadaListDevice(OmadaDevice):
     """An Omada Device (router, switch, eap) as represented in the device list"""
@@ -123,6 +128,14 @@ class OmadaListDevice(OmadaDevice):
         else:
             return False
 
+class OmadaDetailedDevice(OmadaDevice):
+    """Generic properties for Omada Devices (router, switch, eap) as returned by one of the device-type specific endpoints"""
+
+    @property
+    def led_setting(self) -> LedSetting:
+        """The onboard LED setting for the device"""
+        return LedSetting(self._data["ledSetting"])
+
 
 class OmadaLink(OmadaApiData):
     """Up/Downlink connection from a switch/ap device."""
@@ -130,7 +143,7 @@ class OmadaLink(OmadaApiData):
     @property
     def mac(self) -> str:
         """The MAC of the linked device."""
-        return self._data["mac"]
+        return self._data.get("mac", self._data["uplinkMac"])
 
     @property
     def name(self) -> str:
@@ -263,7 +276,7 @@ class OmadaSwitchDeviceCaps(OmadaApiData):
         return self._data["supportBt"]
 
 
-class OmadaSwitch(OmadaDevice):
+class OmadaSwitch(OmadaDetailedDevice):
     """Details of a switch connected to the controller."""
 
     @property
@@ -340,7 +353,7 @@ class OmadaAccesPointLanPortSettings(OmadaApiData):
         return self._data["poeOutEnable"]
 
 
-class OmadaAccessPoint(OmadaDevice):
+class OmadaAccessPoint(OmadaDetailedDevice):
     """Details of an Access Point connected to the controller."""
 
     @property
@@ -380,6 +393,13 @@ class OmadaAccessPoint(OmadaDevice):
             OmadaAccesPointLanPortSettings(p) for p in self._data["lanPortSettings"]
         ]
 
+    @property
+    def wired_uplink(self) -> Optional[OmadaUplink]:
+        """ Wired Uplink device for this ap. """
+        uplink = self._data.get("wiredUplink", None)
+        if uplink is None:
+            return None
+        return OmadaUplink(uplink)        
 
 class OmadaSwitchPortDetails(OmadaSwitchPort):
     """Full details of a port on a switch."""
@@ -647,7 +667,7 @@ class OmadaGatewayPortConfig(OmadaApiData):
         """Full status of the port"""
         return OmadaGatewayPort(self._data["portStat"])
 
-class OmadaGateway(OmadaDevice):
+class OmadaGateway(OmadaDetailedDevice):
 
     @property
     def number_of_ports(self) -> int:
