@@ -4,7 +4,7 @@ import json
 
 from typing import Any
 from re import IGNORECASE, match
-from tplink_omada_client.devices import OmadaApiData
+from tplink_omada_client.devices import OmadaApiData, OmadaDevice
 from tplink_omada_client.definitions import LinkStatus
 from tplink_omada_client.omadasiteclient import OmadaSiteClient
 
@@ -40,6 +40,13 @@ async def get_device_mac(site_client: OmadaSiteClient, mac_or_name: str) -> str:
     if not device:
         raise argparse.ArgumentError(None, f"Device with name {mac_or_name} not found")
     return device.mac
+
+async def get_device_by_mac_or_name(site_client: OmadaSiteClient, mac_or_name: str) -> OmadaDevice:
+    device = next((d for d in await site_client.get_devices() if d.name == mac_or_name or d.mac == mac_or_name), None)
+    if not device:
+        raise argparse.ArgumentError(None, f"Device with name {mac_or_name} not found")
+    return device
+
 
 def dump_raw_data(args: dict[str, Any], data: OmadaApiData):
     if args['dump']:

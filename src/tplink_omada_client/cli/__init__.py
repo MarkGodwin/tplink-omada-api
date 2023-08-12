@@ -2,7 +2,7 @@
 import argparse
 import asyncio
 import sys
-from typing import Any, Sequence, Union
+from typing import Sequence, Union
 
 from tplink_omada_client.exceptions import LoginFailed
 
@@ -16,10 +16,13 @@ from . import (
     command_gateway,
     command_switch,
     command_switches,
+    command_access_points,
+    command_access_point,
     command_target,
     command_targets,
     command_switch_ports,
     command_unblock_client,
+    command_set_device_led
 )
 
 def main(argv: Union[Sequence[str], None] = None) -> int:
@@ -47,10 +50,13 @@ def main(argv: Union[Sequence[str], None] = None) -> int:
     command_known_clients.arg_parser(subparsers)
     command_switch.arg_parser(subparsers)
     command_switches.arg_parser(subparsers)
+    command_access_points.arg_parser(subparsers)
+    command_access_point.arg_parser(subparsers)
     command_switch_ports.arg_parser(subparsers)
     command_target.arg_parser(subparsers)
     command_targets.arg_parser(subparsers)
     command_unblock_client.arg_parser(subparsers)
+    command_set_device_led.arg_parser(subparsers)
 
     try:
         args = parser.parse_args(args=argv)

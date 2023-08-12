@@ -22,6 +22,7 @@ async def command_switch(args) -> int:
         if switch.device_capabilities.supports_poe:
             print(f"PoE ports: {switch.device_capabilities.poe_ports}")
         print(f"Model: {switch.model_display_name}")
+        print(f"LED Setting: {switch.led_setting.name}")
         switch.status_category
         print(f"Uptime: {switch.display_uptime}")
         if switch.uplink:
