@@ -143,7 +143,7 @@ class OmadaLink(OmadaApiData):
     @property
     def mac(self) -> str:
         """The MAC of the linked device."""
-        return self._data.get("mac", self._data["uplinkMac"])
+        return self._data.get("mac", self._data.get("uplinkMac"))
 
     @property
     def name(self) -> str:
