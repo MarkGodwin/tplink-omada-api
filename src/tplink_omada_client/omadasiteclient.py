@@ -476,3 +476,18 @@ class OmadaSiteClient:
         )
 
         return True
+
+    async def set_client_name(self, mac_or_client: Union[str, OmadaNetworkClient], name):
+        """Sets the name of a client"""
+        if isinstance(mac_or_client, OmadaConnectedClient):
+            mac = mac_or_client.mac
+        else:
+            mac = mac_or_client
+        payload = {"name": name }
+        await self._api.request(
+            "patch",
+            self._api.format_url(f"clients/{mac}", self._site_id),
+            payload=payload,
+        )
+
+        return True
