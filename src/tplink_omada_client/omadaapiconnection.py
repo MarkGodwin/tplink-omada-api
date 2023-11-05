@@ -227,6 +227,8 @@ class OmadaApiConnection:
     def _check_application_errors(self, response):
         if not isinstance(response, dict):
             return
+        if not "errorCode" in response:
+            raise RequestFailed(-30109, "Unexpected response: " + str(response))
         if response["errorCode"] == 0:
             return
         if response["errorCode"] == -30109:
