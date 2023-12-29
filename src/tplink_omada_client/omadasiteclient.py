@@ -122,7 +122,7 @@ class OmadaSiteClient:
 
     async def get_connected_clients(self) -> AsyncIterable[OmadaConnectedClient]:
         """Get the clients connected to the site network."""
-        async for client in self._api.iterate_pages(self._api.format_url("clients", self._site_id)):
+        async for client in self._api.iterate_pages(self._api.format_url("clients", self._site_id), {"filters.active": "false"}):
             if client["wireless"]:
                 yield OmadaWirelessClient(client)
             else:

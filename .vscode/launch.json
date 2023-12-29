@@ -51,6 +51,14 @@
             "module": "tplink_omada_client.cli",
             "justMyCode": true,
             "args": ["gateway", "--dump"]
+        },
+        {
+            "name": "CLI: Get Clients",
+            "type": "python",
+            "request": "launch",
+            "module": "tplink_omada_client.cli",
+            "justMyCode": true,
+            "args": ["clients"]
         }
 
     ]
