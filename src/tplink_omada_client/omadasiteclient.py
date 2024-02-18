@@ -17,6 +17,7 @@ from .devices import (
     OmadaDevice,
     OmadaFirmwareUpdate,
     OmadaGateway,
+    OmadaGatewayPortStatus,
     OmadaListDevice,
     OmadaPortProfile,
     OmadaSwitch,
@@ -77,7 +78,6 @@ class AccessPointPortSettings:
         self.enable_poe = enable_poe
         self.vlan_enable = vlan_enable
         self.vlan_id = vlan_id
-
 
 class OmadaSiteClient:
     """Client for querying an Omada site's devices."""
@@ -440,26 +440,37 @@ class OmadaSiteClient:
             if d.type == "gateway"
         ]
 
-    async def get_gateway(self, mac_or_device: Union[str, OmadaDevice, None]) -> OmadaGateway:
+    async def _get_gateway_mac(self, mac_or_device: Union[str, OmadaDevice, None]) -> str:
+            if mac_or_device is None:
+                mac_or_device = next((d for d in await self.get_devices() if d.type == "gateway"), None)
+                if mac_or_device is None:
+                    raise InvalidDevice("No gateways found in site")
+
+            if isinstance(mac_or_device, OmadaDevice):
+                if mac_or_device.type != "gateway":
+                    raise InvalidDevice()
+                return mac_or_device.mac
+            else:
+                return mac_or_device
+            
+    async def get_gateway(self, mac_or_device: Union[str, OmadaDevice, None] = None) -> OmadaGateway:
         """Get the gatway (router) for the site by Mac address or Omada device. (There can be only one!)"""
 
-        if mac_or_device is None:
-            mac_or_device = next((d for d in await self.get_devices() if d.type == "gateway"), None)
-            if mac_or_device is None:
-                raise InvalidDevice("No gateways found in site")
-
-        if isinstance(mac_or_device, OmadaDevice):
-            if mac_or_device.type != "gateway":
-                raise InvalidDevice()
-            mac = mac_or_device.mac
-        else:
-            mac = mac_or_device
-
+        mac = await self._get_gateway_mac(mac_or_device)
         result = await self._api.request(
             "get", self._api.format_url(f"gateways/{mac}", self._site_id)
         )
 
         return OmadaGateway(result)
+    
+    async def set_gateway_wan_port_connect_state(self, port_id: int, connect: bool, mac_or_device: Union[str, OmadaDevice, None] = None, ipv6:bool = False) -> OmadaGatewayPortStatus:
+        """Connects or disconnects the specified WAN port of the gateway to the internet."""
+        mac = await self._get_gateway_mac(mac_or_device)
+        payload = {"portId": port_id, "operation": 1 if connect else 0}
+
+        result = await self._api.request(
+            "post", self._api.format_url(f"cmd/gateways/{mac}/{'ipv6State' if ipv6 else 'internetState'}", self._site_id), payload=payload)
+        return OmadaGatewayPortStatus(result)
 
     async def set_led_setting(self, mac_or_device: Union[str, OmadaDevice], setting: LedSetting) -> bool:
         """Sets the onboard LED setting for the device"""
@@ -491,3 +502,5 @@ class OmadaSiteClient:
         )
 
         return True
+
+

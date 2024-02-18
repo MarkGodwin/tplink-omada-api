@@ -20,8 +20,9 @@ Only a subset of the controller's features are supported:
     * Get firmware information and initiating automatic updates
     * Port status and configuraton for Switches
     * Lan port configuration for Access Points
+    * Gateway port status and WAN port Connect/Disconnect control
 
-Tested with OC200 on Omada Controller Version 5.5.7 - 5.7.6. Other versions may not be fully compatible.
+Tested with OC200 on Omada Controller Version 5.5.7 - 5.12.x. Other versions may not be fully compatible.
 Version 5.0.x is definitely not compatible.
 
 ## CLI
@@ -62,6 +63,13 @@ The available API surface is quite large. More of this could be exposed in the f
 There is an undocumented Websocket API which could potentially be used to get a stream of updates. However,
 I'm not sure how fully featured this subscription channel is on the controller. It seems to be rarely used,
 so probably doesn't include client connect/disconnect notifications.
+
+The Omada platform is transitioning to a new OpenAPI API which this library will need to switch over to using
+eventually. We will try to avoid breaking changes when this happens, but some will be unavoidable - particularly
+authentication.
+
+At the moment, the new API imposes severe daily call limits, even though it is a local device API.
+Hopefully this will change, because it is unusable as it stands.
 
 ## Contributing
 
