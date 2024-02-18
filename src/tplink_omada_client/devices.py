@@ -3,7 +3,7 @@ Definitions for Omada device objects
 
 APs, Switches and Routers
 """
-from typing import List, Optional, Union
+from typing import Any, List, Optional, Union
 from .definitions import (
     BandwidthControl,
     DeviceStatus,
@@ -591,6 +591,11 @@ class OmadaGatewayPort(OmadaApiData):
     def name(self) -> str:
         """Port name"""
         return self._data["name"]
+    
+    @property
+    def display_name(self) -> str:
+        """Port display name"""
+        return self._data.get("portDesc", self.name)
 
     @property
     def type(self) -> GatewayPortType:
@@ -611,11 +616,36 @@ class OmadaGatewayPort(OmadaApiData):
     def wan_connected(self) -> bool:
         """True if the port is connected to the internet/WAN"""
         return self._data.get("internetState", 0) != 0
+    
+    @property
+    def ipv6_wan_connected(self) -> bool:
+        """True if the port is connected to the internet/WAN with IPv6"""
+        return dict[str,Any](self._data.get("wanPortIpv6Config", {})).get("internetState", 0) != 0
+    
+    @property
+    def online_detection(self) -> bool:
+        """True regular internet ping tests are working"""
+        return (self.wan_connected or self.ipv6_wan_connected) and self._data.get("onlineDetection", 0) != 0
 
     @property
     def ip(self) -> Union[str, None]:
-        """The WAN IP of the port (for WAN ports only)"""
+        """DEPRECATED: The WAN IP of the port (for WAN ports only)"""
         return self._data.get("ip")
+
+    @property
+    def wan_ip_address(self) -> Union[str, None]:
+        """The WAN IPv4 Address of the port (for WAN ports only)"""
+        return self._data.get("ip")
+
+    @property
+    def wan_ipv6_enabled(self) -> bool:
+        """The WAN IPv6 Address of the port (for WAN ports only)"""
+        return dict[str,Any](self._data.get("wanPortIpv6Config", {})).get("enable", 0) != 0
+
+    @property
+    def wan_ipv6_address(self) -> Union[str, None]:
+        """The WAN IPv6 Address of the port (for WAN ports only)"""
+        return dict[str,Any](self._data.get("wanPortIpv6Config", {})).get("addr")
 
     @property
     def link_speed(self) -> LinkSpeed:

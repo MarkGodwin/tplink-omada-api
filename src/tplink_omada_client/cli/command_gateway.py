@@ -29,10 +29,13 @@ async def command_gateway(args) -> int:
         wan_ports = (p for p in gateway.port_status if p.mode == GatewayPortMode.WAN)
         lan_ports = (p for p in gateway.port_status if p.mode == GatewayPortMode.LAN)
         print("WAN Ports:")
+        print("         No. Name        IP Addresss    Proto Link Online")
         for p in wan_ports:
             print(f"    Port: {p.port_number:>2} {p.type.name:7} {p.ip:>15} {p.wan_protocol:>8} ", end="")
-            print('\u2611' if p.wan_connected else '\u2610')
+            print('\u2611    ' if p.wan_connected else '\u2610    ', end="")
+            print('\u2611' if p.online_detection else '\u2610')
         print("LAN Ports:")
+        print("         No. Name    Link")
         for p in lan_ports:
             print(f"    Port: {p.port_number:>2} {p.type.name:7} {get_link_status_char(p.link_status)}")
         print(f"LED Setting: {gateway.led_setting.name}")

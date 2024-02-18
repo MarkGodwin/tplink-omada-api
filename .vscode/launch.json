@@ -6,7 +6,7 @@
     "configurations": [
         {
             "name": "CLI: List Devices",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "module": "tplink_omada_client.cli",
             "justMyCode": true,
@@ -14,7 +14,7 @@
         },
         {
             "name": "CLI: List Targets",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "module": "tplink_omada_client.cli",
             "justMyCode": true,
@@ -22,7 +22,7 @@
         },
         {
             "name": "CLI: List Switches",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "module": "tplink_omada_client.cli",
             "justMyCode": true,
@@ -30,7 +30,7 @@
         },
         {
             "name": "CLI: Get Switch",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "module": "tplink_omada_client.cli",
             "justMyCode": true,
@@ -38,7 +38,7 @@
         },
         {
             "name": "CLI: Get Switch Ports",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "module": "tplink_omada_client.cli",
             "justMyCode": true,
@@ -46,15 +46,23 @@
         },
         {
             "name": "CLI: Get Gateway",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "module": "tplink_omada_client.cli",
             "justMyCode": true,
             "args": ["gateway", "--dump"]
         },
         {
+            "name": "CLI: Get Gateway Port Details",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "tplink_omada_client.cli",
+            "justMyCode": true,
+            "args": ["wan", "--port", "2"]
+        },
+        {
             "name": "CLI: Get Clients",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "module": "tplink_omada_client.cli",
             "justMyCode": true,

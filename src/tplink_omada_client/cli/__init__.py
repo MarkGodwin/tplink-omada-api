@@ -23,7 +23,8 @@ from . import (
     command_switch_ports,
     command_unblock_client,
     command_set_device_led,
-    command_set_client_name
+    command_set_client_name,
+    command_wan
 
 )
 
@@ -60,6 +61,7 @@ def main(argv: Union[Sequence[str], None] = None) -> int:
     command_unblock_client.arg_parser(subparsers)
     command_set_device_led.arg_parser(subparsers)
     command_set_client_name.arg_parser(subparsers)
+    command_wan.arg_parser(subparsers)
 
     try:
         args = parser.parse_args(args=argv)
