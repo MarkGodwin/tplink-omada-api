@@ -1,9 +1,8 @@
 """Implementation of 'target' command"""
 from argparse import _SubParsersAction, ArgumentError
 import getpass
-import json
 
-from tplink_omada_client.exceptions import ConnectionFailed, OmadaClientException
+from tplink_omada_client.exceptions import OmadaClientException
 
 from .util import get_target_argument, assert_target_argument
 from .config import ControllerConfig, delete_target_config, get_target_config, set_target_config, to_omada_connection
