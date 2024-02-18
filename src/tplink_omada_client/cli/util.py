@@ -6,7 +6,7 @@ from typing import Any
 from re import IGNORECASE, match
 from tplink_omada_client.devices import OmadaApiData, OmadaDevice
 from tplink_omada_client.definitions import LinkStatus
-from tplink_omada_client.omadasiteclient import OmadaSiteClient
+from tplink_omada_client import OmadaSiteClient
 
 TARGET_ARG: str = "target"
 

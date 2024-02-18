@@ -2,7 +2,7 @@
 
 from argparse import ArgumentParser
 
-from tplink_omada_client.definitions import GatewayPortMode, LinkStatus
+from tplink_omada_client.definitions import GatewayPortMode
 
 from .config import get_target_config, to_omada_connection
 from .util import dump_raw_data, get_link_status_char, get_device_mac, get_target_argument

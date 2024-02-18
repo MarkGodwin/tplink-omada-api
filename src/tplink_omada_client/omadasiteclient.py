@@ -1,6 +1,6 @@
 """Client for Omada Site requests."""
 
-from typing import Any, AsyncIterable, List, Optional, Union
+from typing import AsyncIterable, List, Optional, Union
 
 from .clients import (
     OmadaClientDetails,

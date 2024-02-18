@@ -2,8 +2,6 @@
 
 from argparse import _SubParsersAction
 from datetime import datetime
-from tplink_omada_client.clients import OmadaConnectedClient, OmadaWiredClient, OmadaWirelessClient
-from tplink_omada_client.definitions import ConnectType
 from .config import get_target_config, to_omada_connection
 from .util import dump_raw_data, get_target_argument
 

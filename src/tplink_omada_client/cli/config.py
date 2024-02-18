@@ -3,7 +3,7 @@ from configparser import ConfigParser
 from dataclasses import dataclass
 from pathlib import Path
 
-from tplink_omada_client.omadaclient import OmadaClient
+from tplink_omada_client import OmadaClient
 
 _CONFIG_FILE: Path = Path.home() / '.omada.cfg'
 _CONTROLLER_SECTION_PREFIX: str = 'controller:'

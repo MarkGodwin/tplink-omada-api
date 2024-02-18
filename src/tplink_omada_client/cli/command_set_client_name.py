@@ -1,11 +1,9 @@
 """Implementation for 'set-client-name' command"""
 
 from argparse import _SubParsersAction
-import datetime
-from tplink_omada_client.clients import OmadaWiredClientDetails, OmadaWirelessClientDetails
 
 from .config import get_target_config, to_omada_connection
-from .util import get_device_by_mac_or_name, get_target_argument
+from .util import get_target_argument
 
 async def command_set_client_name(args) -> int:
     """Executes 'set-client-name' command"""
