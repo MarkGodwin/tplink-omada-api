@@ -71,3 +71,10 @@ def get_power_char(power: bool) -> str:
         return "\u26a1"
     else:
         return "  "
+
+def get_display_bytes(bytes: int, short: bool = True) -> str:
+    if bytes / (1 if short else 1024) > 1048576 * 1024 * 512:
+        return f"{bytes / (1048576.0 * 1048576.0):,.1f}TB"
+    if bytes / (1 if short else 1024) > 1048576 * 512:
+        return f"{bytes / (1048576.0 * 1024):,.1f}GB"
+    return f"{bytes / (1048576.0):,.1f}MB"

@@ -17,7 +17,7 @@ from .devices import (
     OmadaDevice,
     OmadaFirmwareUpdate,
     OmadaGateway,
-    OmadaGatewayPort,
+    OmadaGatewayPortStatus,
     OmadaListDevice,
     OmadaPortProfile,
     OmadaSwitch,
@@ -78,7 +78,6 @@ class AccessPointPortSettings:
         self.enable_poe = enable_poe
         self.vlan_enable = vlan_enable
         self.vlan_id = vlan_id
-
 
 class OmadaSiteClient:
     """Client for querying an Omada site's devices."""
@@ -454,7 +453,7 @@ class OmadaSiteClient:
             else:
                 return mac_or_device
             
-    async def get_gateway(self, mac_or_device: Union[str, OmadaDevice, None]) -> OmadaGateway:
+    async def get_gateway(self, mac_or_device: Union[str, OmadaDevice, None] = None) -> OmadaGateway:
         """Get the gatway (router) for the site by Mac address or Omada device. (There can be only one!)"""
 
         mac = await self._get_gateway_mac(mac_or_device)
@@ -464,14 +463,14 @@ class OmadaSiteClient:
 
         return OmadaGateway(result)
     
-    async def set_gateway_wan_port_connect_state(self, port_id: int, connect: bool, mac_or_device: Union[str, OmadaDevice, None], ipv6:bool = False) -> OmadaGatewayPort:
+    async def set_gateway_wan_port_connect_state(self, port_id: int, connect: bool, mac_or_device: Union[str, OmadaDevice, None] = None, ipv6:bool = False) -> OmadaGatewayPortStatus:
         """Connects or disconnects the specified WAN port of the gateway to the internet."""
         mac = await self._get_gateway_mac(mac_or_device)
         payload = {"portId": port_id, "operation": 1 if connect else 0}
 
         result = await self._api.request(
             "post", self._api.format_url(f"cmd/gateways/{mac}/{'ipv6State' if ipv6 else 'internetState'}", self._site_id), payload=payload)
-        return OmadaGatewayPort(result)
+        return OmadaGatewayPortStatus(result)
 
     async def set_led_setting(self, mac_or_device: Union[str, OmadaDevice], setting: LedSetting) -> bool:
         """Sets the onboard LED setting for the device"""

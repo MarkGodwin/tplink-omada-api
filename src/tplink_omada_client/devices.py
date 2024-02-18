@@ -3,6 +3,7 @@ Definitions for Omada device objects
 
 APs, Switches and Routers
 """
+from abc import ABC, abstractmethod, abstractproperty
 from typing import Any, List, Optional, Union
 from .definitions import (
     BandwidthControl,
@@ -178,8 +179,40 @@ class OmadaDownlink(OmadaLink):
 class OmadaUplink(OmadaLink):
     """Uplink connection from a switch/ap device."""
 
+class OmadaPortStatus(ABC):
+    @property
+    @abstractmethod
+    def link_status(self) -> LinkStatus:
+        """Port's link status."""
+        pass
 
-class OmadaPortStatus(OmadaApiData):
+    @property
+    @abstractmethod
+    def link_speed(self) -> LinkSpeed:
+        """Port's link speed."""
+        pass
+
+    @property
+    @abstractmethod
+    def bytes_tx(self) -> int:
+        """Number of bytes transmitted by the port."""
+        pass
+
+    @property
+    @abstractmethod
+    def bytes_rx(self) -> int:
+        """Number of bytes received by the port."""
+        pass
+
+    @property
+    @abstractmethod
+    def poe_active(self) -> bool:
+        """Is the port powering a PoE device?"""
+        pass
+
+
+
+class OmadaSwitchPortStatus(OmadaApiData, OmadaPortStatus):
     """Status information for a switch port."""
 
     @property
@@ -217,7 +250,6 @@ class OmadaPortStatus(OmadaApiData):
         """Stp blocking status in spanning tree."""
         return self._data["stpDiscarding"]
 
-
 class OmadaSwitchPort(OmadaApiData):
     """Port on a switch/gateway device."""
 
@@ -252,9 +284,9 @@ class OmadaSwitchPort(OmadaApiData):
         return self._data["disable"]
 
     @property
-    def port_status(self) -> OmadaPortStatus:
+    def port_status(self) -> OmadaSwitchPortStatus:
         """Status of the port."""
-        return OmadaPortStatus(self._data["portStatus"])
+        return OmadaSwitchPortStatus(self._data["portStatus"])
 
 
 class OmadaSwitchDeviceCaps(OmadaApiData):
@@ -580,8 +612,8 @@ class OmadaFirmwareUpdate(OmadaApiData):
         """Release notes for the new firmware."""
         return self._data["fwReleaseLog"]
 
-class OmadaGatewayPort(OmadaApiData):
-
+class OmadaGatewayPortStatus(OmadaApiData, OmadaPortStatus):
+    
 
     @property
     def port_number(self) -> int:
@@ -612,6 +644,20 @@ class OmadaGatewayPort(OmadaApiData):
         """Low level connectivity status of the link."""
         return LinkStatus(self._data["status"])
 
+    @property
+    def bytes_tx(self) -> int:
+        """Number of bytes transmitted by the port."""
+        return self._data["tx"]
+
+    @property
+    def bytes_rx(self) -> int:
+        """Number of bytes received by the port."""
+        return self._data["rx"]
+    
+    @property
+    def poe_active(self) -> bool:
+        return self._data.get("poe", 0) != 0
+    
     @property
     def wan_connected(self) -> bool:
         """True if the port is connected to the internet/WAN"""
@@ -672,6 +718,11 @@ class OmadaGatewayPort(OmadaApiData):
 
 
 class OmadaGatewayPortConfig(OmadaApiData):
+
+    def __init__(self, data: dict, poe_enabled: Union[bool, None]):
+        super().__init__(data)
+        self._poe_enabled = poe_enabled
+
     @property
     def port_number(self) -> int:
         """Port number"""
@@ -693,9 +744,20 @@ class OmadaGatewayPortConfig(OmadaApiData):
         return self._data.get("mirrorEnable", False)
 
     @property
-    def port_status(self) -> OmadaGatewayPort:
+    def port_status(self) -> OmadaGatewayPortStatus:
         """Full status of the port"""
-        return OmadaGatewayPort(self._data["portStat"])
+        return OmadaGatewayPortStatus(self._data["portStat"])
+    
+    @property
+    def poe_mode(self) -> PoEMode:
+        """PoE mode for the port"""
+        poe_mode_mapping = {
+            True: PoEMode.ENABLED,
+            False: PoEMode.DISABLED,
+            None: PoEMode.NONE
+        }
+
+        return poe_mode_mapping[self._poe_enabled]
 
 class OmadaGateway(OmadaDetailedDevice):
 
@@ -715,17 +777,23 @@ class OmadaGateway(OmadaDetailedDevice):
         return self._data["ip"]
 
     @property
-    def port_status(self) -> List[OmadaGatewayPort]:
+    def port_status(self) -> List[OmadaGatewayPortStatus]:
         """Status of the gateway's ports."""
         return [
-            OmadaGatewayPort(p) for p in self._data["portStats"]
+            OmadaGatewayPortStatus(p) for p in self._data["portStats"]
         ]
 
     @property
     def port_configs(self) -> List[OmadaGatewayPortConfig]:
         """Configuration of the gateway's ports. Also includes status..."""
+
+        poeData = {}
+        if self.supports_poe:
+            # Combined Gateway+PoE switch has this extra data
+            poeData = {int(x["portId"]): bool(x["enable"]) for x in self._data["poeSettings"]}
+
         return [
-            OmadaGatewayPortConfig(p) for p in self._data["portConfigs"]
+            OmadaGatewayPortConfig(p, poeData.get(p["port"])) for p in self._data["portConfigs"]
         ]
 
     @property

@@ -7,7 +7,7 @@ from tplink_omada_client.definitions import PoEMode, PortType
 from tplink_omada_client.devices import OmadaSwitch, OmadaSwitchPortDetails
 
 from .config import get_target_config, to_omada_connection
-from .util import dump_raw_data, get_checkbox_char, get_link_status_char, get_device_mac, get_power_char, get_target_argument
+from .util import dump_raw_data, get_checkbox_char, get_display_bytes, get_link_status_char, get_device_mac, get_power_char, get_target_argument
 
 async def command_switch_ports(args) -> int:
     """Executes 'switch_ports' command"""
@@ -62,13 +62,6 @@ def print_port_table(switch: OmadaSwitch, ports: List[OmadaSwitchPortDetails]):
         else:
             print(" x      -W ", end="")
         print(f" {get_display_bytes(p.port_status.bytes_rx):>12} {get_display_bytes(p.port_status.bytes_tx):>12}")
-
-def get_display_bytes(bytes: int, short: bool = True) -> str:
-    if bytes / (1 if short else 1024) > 1048576 * 1024 * 512:
-        return f"{bytes / (1048576.0 * 1048576.0):,.1f}TB"
-    if bytes / (1 if short else 1024) > 1048576 * 512:
-        return f"{bytes / (1048576.0 * 1024):,.1f}GB"
-    return f"{bytes / (1048576.0):,.1f}MB"
 
 def arg_parser(subparsers) -> None:
     """Configures arguments parser for 'switch_ports' command"""
