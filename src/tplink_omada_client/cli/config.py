@@ -18,7 +18,7 @@ class ControllerConfig:
     password: str
     site: str
 
-def get_targets() -> list[tuple[str, str, bool]]:
+def get_targets() -> list[tuple[str, ControllerConfig, bool]]:
     """Get all the controllers in config file"""
     config_parser = _read_config_file()
     default_target = config_parser[_CLI_SECTION][_DEFAULT_TARGET] if _CLI_SECTION in config_parser else ""
@@ -26,7 +26,7 @@ def get_targets() -> list[tuple[str, str, bool]]:
     for (target, config) in config_parser.items():
         if target.startswith(_CONTROLLER_SECTION_PREFIX):
             name = target[len(_CONTROLLER_SECTION_PREFIX):]
-            targets.append((name, config["url"], name == default_target))
+            targets.append((name, ControllerConfig(**config), name == default_target))
     return targets
 
 def get_target_config(name: str) -> ControllerConfig:
@@ -68,6 +68,13 @@ def set_default_target(name: str) -> None:
         config_parser[_CLI_SECTION] = {}
     config_parser[_CLI_SECTION][_DEFAULT_TARGET] = name
     _write_config_file(config_parser)
+
+def delete_target_config(name: str) -> None:
+    config = _read_config_file()
+    stored_name = _to_stored_name(name)
+    if config.has_section(stored_name):
+        config.remove_section(stored_name)
+        _write_config_file(config)
 
 def to_omada_connection(config: ControllerConfig) -> OmadaClient:
     """Create a OmadaClient based on a ControllerConfig object"""

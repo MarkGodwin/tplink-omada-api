@@ -13,7 +13,7 @@ TARGET_ARG: str = "target"
 def assert_target_argument(args: dict[str, Any]) -> str:
     """Throws ArgumentError if target arg missing"""
     if args[TARGET_ARG] == "": # The default is now empty
-        raise argparse.ArgumentError(None, f"error: Missing --{TARGET_ARG} argument")
+        raise argparse.ArgumentError(None, f"error: Target name must be supplied using --{TARGET_ARG} argument")
     return args[TARGET_ARG]
 
 def get_target_argument(args: dict[str, Any]) -> str:
