@@ -23,7 +23,7 @@ async def command_client(args) -> int:
             print(f"Hostname: {client.host_name}")
         print(f"Blocked: {client.is_blocked}")
         if client.is_active:
-            uptime = str(datetime.timedelta(seconds=client.connection_time))
+            uptime = str(datetime.timedelta(seconds=float(client.connection_time or 0)))
             print(f"Uptime: {uptime}")
         if isinstance(client, OmadaWiredClientDetails):
             if client.connect_dev_type == 'switch':

@@ -3,7 +3,7 @@
 from argparse import ArgumentParser
 from typing import List
 
-from tplink_omada_client.definitions import LinkStatus, PoEMode, PortType
+from tplink_omada_client.definitions import PoEMode, PortType
 from tplink_omada_client.devices import OmadaSwitch, OmadaSwitchPortDetails
 
 from .config import get_target_config, to_omada_connection

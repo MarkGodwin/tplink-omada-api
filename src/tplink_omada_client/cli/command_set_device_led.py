@@ -1,8 +1,6 @@
 """Implementation for 'set-device-led' command"""
 
 from argparse import _SubParsersAction
-import datetime
-from tplink_omada_client.clients import OmadaWiredClientDetails, OmadaWirelessClientDetails
 
 from tplink_omada_client.definitions import LedSetting
 from .config import get_target_config, to_omada_connection
