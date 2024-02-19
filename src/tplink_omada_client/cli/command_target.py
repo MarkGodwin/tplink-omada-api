@@ -28,6 +28,10 @@ async def command_target(args) -> int:
             config.password = args['password']
         if args['site']:
             config.site = args['site']
+        if args['verify_ssl']:
+            config.verify_ssl = True
+        elif args['no_verify_ssl']:
+            config.verify_ssl = False
     except ValueError:
 
         if args['delete']:
@@ -46,6 +50,7 @@ async def command_target(args) -> int:
             username=args['username'],
             password=password,
             site=args['site'] if args['site'] else "Default",
+            verify_ssl=args['verify_ssl'] or not args['no_verify_ssl']
         )
     
     # Connect to controller to validate config
@@ -53,7 +58,7 @@ async def command_target(args) -> int:
         async with to_omada_connection(config) as client:
             name = await client.get_controller_name()
             for site in await client.get_sites():
-                if args['site'] == site.name:
+                if config.site == site.name:
                     print(f"Set target {target} to controller {name} and site {site.name}")
                     set_target_config(target, config, args['set_default'])
                     return 0
@@ -76,7 +81,7 @@ def arg_parser(subparsers: _SubParsersAction) -> None:
     )
 
     set_parser.set_defaults(func=command_target)
-    add_group = set_parser.add_argument_group(title="Add/Update Targets", description="Specify options to add or update a target named target")
+    add_group = set_parser.add_argument_group(title="Add/Update Targets", description="Specify options to add or update a named target")
     add_group.add_argument(
         '--url',
         help="The URL of the Omada controller",
@@ -100,6 +105,16 @@ def arg_parser(subparsers: _SubParsersAction) -> None:
         '--set-default',
         help="Set this target as the default",
         action='store_true')
+    add_group.add_argument(
+        '--verify-ssl',
+        help="Verify the controller's SSL certificate (default on add)",
+        action='store_true'
+    )
+    add_group.add_argument(
+        '--no-verify-ssl',
+        help="Do not verify the controller's SSL certificate",
+        action='store_true'
+    )
     
     set_parser.add_argument('--delete', help="Delete the target", action='store_true')
 
