@@ -21,6 +21,14 @@
             "args": ["targets"]
         },
         {
+            "name": "CLI: Update Target",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "tplink_omada_client.cli",
+            "justMyCode": true,
+            "args": ["--target", "OC200b", "target", "--no-verify-ssl"]
+        },
+        {
             "name": "CLI: List Switches",
             "type": "debugpy",
             "request": "launch",
