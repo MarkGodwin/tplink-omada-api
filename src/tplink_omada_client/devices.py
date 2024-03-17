@@ -795,6 +795,15 @@ class OmadaGateway(OmadaDetailedDevice):
         return [
             OmadaGatewayPortConfig(p, poeData.get(p["port"])) for p in self._data["portConfigs"]
         ]
+    
+    @property
+    def lldp_enabled(self) -> bool:
+        """LLDP Enabled for the whole gateway"""
+        return self._data.get("lldpEnable", False)
+    
+    @property
+    def echo_server(self) -> Union[str, None]:
+        return self._data.get("echoServer")
 
     @property
     def is_combined_gateway(self) -> bool:
