@@ -69,6 +69,14 @@
             "args": ["wan", "--port", "2"]
         },
         {
+            "name": "CLI: Set Port Port PoE",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "tplink_omada_client.cli",
+            "justMyCode": true,
+            "args": ["poe", "Main Switch", "--port", "2", "--on", "-d"]
+        },
+        {
             "name": "CLI: Get Clients",
             "type": "debugpy",
             "request": "launch",

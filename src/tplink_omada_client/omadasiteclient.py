@@ -17,6 +17,7 @@ from .devices import (
     OmadaDevice,
     OmadaFirmwareUpdate,
     OmadaGateway,
+    OmadaGatewayPortConfig,
     OmadaGatewayPortStatus,
     OmadaListDevice,
     OmadaPortProfile,
@@ -78,6 +79,18 @@ class AccessPointPortSettings:
         self.enable_poe = enable_poe
         self.vlan_enable = vlan_enable
         self.vlan_id = vlan_id
+
+class GatewayPortSettings:
+    """
+    Settings that can be applied to network ports on gateways
+
+    Specify the values you want to modify. The remaining values will be unaffected
+    """
+    def __init__(
+        self,
+        enable_poe: Optional[bool] = None
+    ):
+        self.enable_poe = enable_poe
 
 class OmadaSiteClient:
     """Client for querying an Omada site's devices."""
@@ -167,7 +180,7 @@ class OmadaSiteClient:
             for d in await self.get_devices()
             if d.type == "ap"
         ]
-
+    
     async def get_access_point(
         self, mac_or_device: Union[str, OmadaDevice]
     ) -> OmadaAccessPoint:
@@ -185,6 +198,18 @@ class OmadaSiteClient:
         )
 
         return OmadaAccessPoint(result)
+    
+    async def get_access_point_port(
+        self, mac_or_device: Union[str, OmadaDevice],
+        port_name: str) -> OmadaAccesPointLanPortSettings:
+        """Get the config of a single network port on an access point."""
+        ap = await self.get_access_point(mac_or_device)
+
+        port = next(p for p in ap.lan_port_settings if p.port_name == port_name)
+        if(port is None):
+            raise InvalidDevice(f"Port {port_name} not found")
+        return port
+
 
     async def get_switch(self, mac_or_device: Union[str, OmadaDevice]) -> OmadaSwitch:
         """Get a switch by Mac address or Omada device."""
@@ -463,6 +488,14 @@ class OmadaSiteClient:
 
         return OmadaGateway(result)
     
+    async def get_gateway_port(self, port_id: int, mac_or_deviec: Union[str, OmadaDevice, None] = None) -> OmadaGatewayPortConfig:
+        """Get the port config for a specified port on the gateway"""
+        gw = await self.get_gateway(mac_or_deviec)
+        port_config = next(p for p in gw.port_configs if p.port_number == port_id)
+        if port_config is None:
+            raise InvalidDevice(f"Port {port_id} not found")
+        return port_config
+    
     async def set_gateway_wan_port_connect_state(self, port_id: int, connect: bool, mac_or_device: Union[str, OmadaDevice, None] = None, ipv6:bool = False) -> OmadaGatewayPortStatus:
         """Connects or disconnects the specified WAN port of the gateway to the internet."""
         mac = await self._get_gateway_mac(mac_or_device)
@@ -471,6 +504,39 @@ class OmadaSiteClient:
         result = await self._api.request(
             "post", self._api.format_url(f"cmd/gateways/{mac}/{'ipv6State' if ipv6 else 'internetState'}", self._site_id), payload=payload)
         return OmadaGatewayPortStatus(result)
+    
+    async def set_gateway_port_settings(self, port_id: int, settings: GatewayPortSettings, mac_or_device: Union[str, OmadaDevice, None] = None) -> OmadaGatewayPortConfig:
+        """Sets the settings for the specified port of the gateway."""
+        mac = await self._get_gateway_mac(mac_or_device)
+
+        # Currently, we (and the Omada API) only supports PoE, so if the caller isn't asking for a PoE change, it's a no-op, but we should still return the current settings
+        if settings.enable_poe is not None:
+
+            # Reject requests that ask to set PoE on gateways that don't support it
+            gw = await self.get_gateway(mac)
+            if not gw.supports_poe and settings.enable_poe is not None:
+                raise InvalidDevice("This gateway does not support PoE")
+
+            # Thanks to dkriegner, we know the request format is:
+            # {"lldpEnable":false,"echoServer":"0.0.0.0","poeSettings":[{"enable":true,"portId":5},{"enable":true,"portId":6},{"enable":true,"portId":7},{"enable":true,"portId":8},{"enable":true,"portId":9},{"enable":true,"portId":10},{"enable":true,"portId":11},{"enable":true,"portId":12}]}
+            # We probably don't need to specify all of these for PATCH, but it's what the UI does, and I have no way of testing
+            payload = {
+                "lldpEnable": gw.lldp_enabled,
+                "echoServer": gw.echo_server,
+                "poeSettings": [
+                    # Output an entry for every port that supports PoE, setting the appropriate port as requested
+                    {
+                        "enable": settings.enable_poe if settings.enable_poe is not None and port_id == p.port_number else p.poe_mode == PoEMode.ENABLED,
+                        "portId": p.port_number
+                    } for p in gw.port_configs if p.poe_mode != PoEMode.NONE
+                ]
+            }
+            
+            await self._api.request(
+                "patch", self._api.format_url(gw.resource_path, self._site_id), payload=payload)
+            
+        # The result data includes an incomplete representation of the gateway port state, so we just request a new update
+        return await self.get_gateway_port(port_id, mac)
 
     async def set_led_setting(self, mac_or_device: Union[str, OmadaDevice], setting: LedSetting) -> bool:
         """Sets the onboard LED setting for the device"""
