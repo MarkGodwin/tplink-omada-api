@@ -92,3 +92,11 @@ class OmadaClient:
             return site_id
 
         raise SiteNotFound(f"Site '{site_name}' not found")
+    
+    def get_verify_ssl_switch(self) -> bool:
+        """Get the verify_ssl setting."""
+        return self._api.get_verify_ssl_switch()
+    
+    def set_verify_ssl_switch(self, verify_ssl: bool) -> None:
+        """Set the verify_ssl setting."""
+        self._api.set_verify_ssl_switch(verify_ssl)

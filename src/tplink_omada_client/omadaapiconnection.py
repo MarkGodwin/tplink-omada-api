@@ -234,3 +234,13 @@ class OmadaApiConnection:
         if response["errorCode"] == -30109:
             raise LoginFailed(response["errorCode"], response["msg"])
         raise RequestFailed(response["errorCode"], response["msg"])
+
+
+    def get_verify_ssl_switch(self):
+        """Return the verify_ssl switch."""
+        return self._verify_ssl
+    
+    def set_verify_ssl_switch(self, verify_ssl: bool):
+        """Set the verify_ssl switch."""
+        self._verify_ssl = verify_ssl
+        return self._verify_ssl
