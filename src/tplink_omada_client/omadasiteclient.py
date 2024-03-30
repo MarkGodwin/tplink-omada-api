@@ -189,7 +189,7 @@ class OmadaSiteClient:
         if payload == {}:
             return await self.get_client(mac_or_client)
 
-        result = await self._api.request("patch", self._api.format_url(f"clients/{mac}", self._site_id), payload=payload)
+        result = await self._api.request("patch", self._api.format_url(f"clients/{mac}", self._site_id), json=payload)
         if result.get("wireless"):
             return OmadaWirelessClientDetails(result)
         else:
@@ -407,7 +407,7 @@ class OmadaSiteClient:
         result = await self._api.request(
             "patch",
             self._api.format_url(f"eaps/{access_point.mac}", self._site_id),
-            payload=payload,
+            json=payload,
         )
 
         updated_ap = OmadaAccessPoint(result)
@@ -459,7 +459,7 @@ class OmadaSiteClient:
         await self._api.request(
             "patch",
             self._api.format_url(f"switches/{mac}/ports/{port.port}", self._site_id),
-            payload=payload,
+            json=payload,
         )
 
         # Read back the new port settings
@@ -513,7 +513,7 @@ class OmadaSiteClient:
         await self._api.request(
             "post",
             self._api.format_url(f"cmd/devices/{mac}/onlineUpgrade", self._site_id),
-            payload=payload,
+            json=payload,
         )
 
         return True
@@ -564,7 +564,7 @@ class OmadaSiteClient:
         payload = {"portId": port_id, "operation": 1 if connect else 0}
 
         result = await self._api.request(
-            "post", self._api.format_url(f"cmd/gateways/{mac}/{'ipv6State' if ipv6 else 'internetState'}", self._site_id), payload=payload)
+            "post", self._api.format_url(f"cmd/gateways/{mac}/{'ipv6State' if ipv6 else 'internetState'}", self._site_id), json=payload)
         return OmadaGatewayPortStatus(result)
     
     async def set_gateway_port_settings(self, port_id: int, settings: GatewayPortSettings, mac_or_device: Union[str, OmadaDevice, None] = None) -> OmadaGatewayPortConfig:
@@ -595,7 +595,7 @@ class OmadaSiteClient:
             }
             
             await self._api.request(
-                "patch", self._api.format_url(gw.resource_path, self._site_id), payload=payload)
+                "patch", self._api.format_url(gw.resource_path, self._site_id), json=payload)
             
         # The result data includes an incomplete representation of the gateway port state, so we just request a new update
         return await self.get_gateway_port(port_id, mac)
@@ -611,7 +611,7 @@ class OmadaSiteClient:
         await self._api.request(
             "patch",
             self._api.format_url(device.resource_path, self._site_id),
-            payload=payload,
+            json=payload,
         )
 
         return True
@@ -626,7 +626,7 @@ class OmadaSiteClient:
         await self._api.request(
             "patch",
             self._api.format_url(f"clients/{mac}", self._site_id),
-            payload=payload,
+            json=payload,
         )
 
         return True
