@@ -83,6 +83,14 @@
             "module": "tplink_omada_client.cli",
             "justMyCode": true,
             "args": ["clients"]
+        },
+        {
+            "name": "CLI: Get Client",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "tplink_omada_client.cli",
+            "justMyCode": true,
+            "args": ["client", "Nanoleaf", "--dump"]
         }
 
     ]

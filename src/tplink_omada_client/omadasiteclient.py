@@ -92,6 +92,33 @@ class GatewayPortSettings:
     ):
         self.enable_poe = enable_poe
 
+class OmadaClientFixedAddress:
+    """
+    Describes a fixed IP address reservation for a client
+    """
+    def __init__(
+            self,
+            network_id: Optional[str] = None,
+            ip_address: Optional[str] = None,
+    ):
+        self.network_id = network_id
+        self.ip_address = ip_address
+
+class OmadaClientSettings:
+    """
+    Settings that can be applied to a client
+    """
+    def __init__(
+            self,
+            name: Optional[str] = None,
+            lock_to_aps: Optional[list[str]] = None,
+            fixed_address: Optional[OmadaClientFixedAddress] = None,
+           
+    ):
+        self.name = name
+        self.lock_to_aps = lock_to_aps
+        self.fixed_address = fixed_address
+
 class OmadaSiteClient:
     """Client for querying an Omada site's devices."""
 
@@ -128,6 +155,41 @@ class OmadaSiteClient:
             "get", self._api.format_url(f"clients/{mac}", self._site_id)
         )
 
+        if result.get("wireless"):
+            return OmadaWirelessClientDetails(result)
+        else:
+            return OmadaWiredClientDetails(result)
+        
+    async def update_client(self, mac_or_client: Union[str, OmadaNetworkClient], settings: OmadaClientSettings):
+        """Update configuration of a client"""
+        if isinstance(mac_or_client, OmadaConnectedClient):
+            mac = mac_or_client.mac
+        else:
+            mac = mac_or_client
+
+        payload = {}
+        if settings.name:
+            payload["name"] = settings.name   
+        if settings.lock_to_aps is not None:
+            payload["clientLockToApSetting"] = {
+                "enable": len(settings.lock_to_aps) > 0,
+                "aps": settings.lock_to_aps
+            }
+        if settings.fixed_address:
+            if settings.fixed_address.ip_address:
+                payload["ipSetting"] = {
+                    "useFixedAddr": True,
+                    "netId": settings.fixed_address.network_id,
+                    "ip": settings.fixed_address.ip_address
+                }
+            else:
+                payload["ipSetting"] = {
+                    "useFixedAddr": False
+                }
+        if payload == {}:
+            return await self.get_client(mac_or_client)
+
+        result = await self._api.request("patch", self._api.format_url(f"clients/{mac}", self._site_id), payload=payload)
         if result.get("wireless"):
             return OmadaWirelessClientDetails(result)
         else:
@@ -555,7 +617,7 @@ class OmadaSiteClient:
         return True
 
     async def set_client_name(self, mac_or_client: Union[str, OmadaNetworkClient], name):
-        """Sets the name of a client"""
+        """Sets the name of a client (Deprecated)"""
         if isinstance(mac_or_client, OmadaConnectedClient):
             mac = mac_or_client.mac
         else:

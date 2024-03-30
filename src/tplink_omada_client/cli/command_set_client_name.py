@@ -2,8 +2,11 @@
 
 from argparse import _SubParsersAction
 
+from tplink_omada_client.cli.command_client import print_client
+from tplink_omada_client.omadasiteclient import OmadaClientSettings
+
 from .config import get_target_config, to_omada_connection
-from .util import get_target_argument
+from .util import dump_raw_data, get_client_mac, get_target_argument
 
 async def command_set_client_name(args) -> int:
     """Executes 'set-client-name' command"""
@@ -12,9 +15,15 @@ async def command_set_client_name(args) -> int:
 
     async with to_omada_connection(config) as client:
         site_client = await client.get_site_client(config.site)
-        mac = await site_client.get_client(args['mac'])
+        mac = await get_client_mac(site_client, args['mac'])
+
         name = args['name']
-        await site_client.set_client_name(mac, name)
+        client = await site_client.update_client(mac, OmadaClientSettings(name=name))
+
+        print_client(client)
+        
+        dump_raw_data(args, client)
+
     return 0
 
 def arg_parser(subparsers: _SubParsersAction) -> None:
@@ -24,8 +33,9 @@ def arg_parser(subparsers: _SubParsersAction) -> None:
         help="Sets the name of an omada client")
     parser.add_argument(
         "mac",
-        help="The MAC address of the client to set the name for",
+        help="The MAC address or name of the client to set the name for",
     )
     parser.add_argument("name", help="The new name of the client")
+    parser.add_argument('-d', '--dump', help="Output raw client information",  action='store_true')
 
     parser.set_defaults(func=command_set_client_name)
