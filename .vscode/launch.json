@@ -83,6 +83,22 @@
             "module": "tplink_omada_client.cli",
             "justMyCode": true,
             "args": ["clients"]
+        },
+        {
+            "name": "CLI: Get Client",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "tplink_omada_client.cli",
+            "justMyCode": true,
+            "args": ["client", "Nanoleaf", "--dump"]
+        },
+        {
+            "name": "CLI: Upload certificate",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "tplink_omada_client.cli",
+            "justMyCode": true,
+            "args": ["upload-certificate", "/workspaces/tplink-omada-api/omada3.pfx"]
         }
 
     ]

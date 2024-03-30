@@ -5,7 +5,7 @@ from typing import Any, AsyncIterable, Optional, Tuple
 
 import re
 from urllib.parse import urlsplit, urljoin
-from aiohttp import client_exceptions, CookieJar
+from aiohttp import Payload, client_exceptions, CookieJar
 from aiohttp.client import ClientSession
 from awesomeversion  import AwesomeVersion
 
@@ -104,7 +104,7 @@ class OmadaApiConnection:
 
         auth = {"username": self._username, "password": self._password}
         response = await self._do_request(
-            "post", self.format_url("login"), payload=auth
+            "post", self.format_url("login"), json=auth
         )
 
         self._csrf_token = response["token"]
@@ -167,16 +167,16 @@ class OmadaApiConnection:
             for item in data:
                 yield item
 
-    async def request(self, method: str, url: str, params=None, payload=None) -> Any:
+    async def request(self, method: str, url: str, params=None, json=None, data: Optional[Payload] = None) -> Any:
         """Perform a request specific to the controlller, with authentication"""
 
         if not await self._check_login():
             await self.login()
 
-        return await self._do_request(method, url, params=params, payload=payload)
-
+        return await self._do_request(method, url, params=params, json=json, data=data)
+       
     async def _do_request(
-        self, method: str, url: str, params=None, payload=None
+        self, method: str, url: str, params=None, json=None, data: Optional[Payload] = None
     ) -> Any:
         """Perform a request on the controller, and unpack the response."""
 
@@ -194,7 +194,8 @@ class OmadaApiConnection:
                 url,
                 params=params,
                 headers=headers,
-                json=payload,
+                json=json,
+                data=data,
                 ssl=self._verify_ssl,
             ) as response:
 

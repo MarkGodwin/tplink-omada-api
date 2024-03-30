@@ -1,6 +1,9 @@
 """ Simple Http client for Omada controller REST api. """
+import os
 from typing import NamedTuple, Optional, Union
+from aiohttp import MultipartWriter
 from aiohttp.client import ClientSession
+from multidict import CIMultiDict
 
 from .omadasiteclient import OmadaSiteClient
 from .omadaapiconnection import OmadaApiConnection
@@ -92,3 +95,47 @@ class OmadaClient:
             return site_id
 
         raise SiteNotFound(f"Site '{site_name}' not found")
+    
+    async def reboot(self) -> int:
+        """
+        Reboot the Omada controller.
+        
+        Returns the estimated number of seconds until the reboot finishes.
+        """
+        url = self._api.format_url("cmd/reboot")
+        result = await self._api.request("post", url)
+
+        return result["rebootTime"]
+
+
+    async def set_certificate(self, file: str, cert_password: str):
+        """Upload a new PKCS12 PFX certificate to the controller."""
+
+        base_name = os.path.basename(file)
+        with open(file, "rb") as upload_file:
+            cert_data = upload_file.read()
+
+        with MultipartWriter("form-data") as mpwriter:
+            file_part = mpwriter.append(cert_data, CIMultiDict({'Content-Type': 'application/x-pkcs12'}))
+            file_part.set_content_disposition("form-data", name="file", filename=base_name)
+
+            data_part = mpwriter.append_json({"cerName": base_name})
+            data_part.set_content_disposition("form-data", name="data")
+
+            url = self._api.format_url("files/controller/certificate")
+            upload_result = await self._api.request("post", url, data=mpwriter)
+        cert_id = upload_result["cerId"]
+        cert_name = upload_result["cerName"]
+
+        payload = {
+            "certificate": {
+                "cerId": cert_id,
+                "cerName": cert_name,
+                "cerType": "PFX",
+                "enable": True,
+                "keyPassword": cert_password,
+            }
+        }
+        url = self._api.format_url("controller/setting")
+        await self._api.request("patch", url, json=payload)
+

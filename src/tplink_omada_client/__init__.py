@@ -1,6 +1,6 @@
 from .devices import OmadaSwitchPortDetails
 from .omadaclient import OmadaClient, OmadaSite
-from .omadasiteclient import OmadaSiteClient, SwitchPortOverrides, AccessPointPortSettings
+from .omadasiteclient import OmadaSiteClient, SwitchPortOverrides, AccessPointPortSettings, GatewayPortSettings, OmadaClientSettings, OmadaClientFixedAddress
 from . import definitions
 from . import exceptions
 from . import clients 
@@ -10,6 +10,9 @@ __all__ = [
     "OmadaSite",
     "OmadaSiteClient",
     "AccessPointPortSettings",
+    "GatewayPortSettings",
+    "OmadaClientSettings",
+    "OmadaClientFixedAddress",
     "SwitchPortOverrides",
     "OmadaSwitchPortDetails",
     "definitions",
