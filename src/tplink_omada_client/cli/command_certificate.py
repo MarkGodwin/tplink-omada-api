@@ -3,8 +3,6 @@
 from argparse import ArgumentParser
 import getpass
 
-from tplink_omada_client.definitions import GatewayPortMode, PoEMode
-
 from .config import get_target_config, to_omada_connection
 from .util import get_target_argument
 

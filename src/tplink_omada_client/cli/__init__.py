@@ -2,7 +2,7 @@
 import argparse
 import asyncio
 import sys
-from typing import Sequence, Union
+from typing import Sequence
 
 from tplink_omada_client.exceptions import LoginFailed
 
@@ -30,7 +30,7 @@ from . import (
     command_wan,
 )
 
-def main(argv: Union[Sequence[str], None] = None) -> int:
+def main(argv: Sequence[str]|None = None) -> int:
     """Entry point for Omada CLI"""
     if argv is None:
         argv = sys.argv[1:]

@@ -1,6 +1,6 @@
 """Implementation for 'wan' command"""
 
-from argparse import ArgumentError, ArgumentParser
+from argparse import ArgumentParser
 
 from tplink_omada_client.definitions import GatewayPortMode
 

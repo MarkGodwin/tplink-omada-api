@@ -1,11 +1,8 @@
 """Implementation for 'switch_ports' command"""
 
 from argparse import ArgumentParser
-from typing import List
-
 from tplink_omada_client.definitions import PoEMode, PortType
 from tplink_omada_client.devices import OmadaSwitch, OmadaSwitchPortDetails
-
 from .config import get_target_config, to_omada_connection
 from .util import dump_raw_data, get_checkbox_char, get_display_bytes, get_link_status_char, get_device_mac, get_power_char, get_target_argument
 
@@ -48,7 +45,7 @@ async def command_switch_ports(args) -> int:
 
     return 0
 
-def print_port_table(switch: OmadaSwitch, ports: List[OmadaSwitchPortDetails]):
+def print_port_table(switch: OmadaSwitch, ports: list[OmadaSwitchPortDetails]):
     print("No. Name            Profile Ena Ovr Link     Speed PoE  Power      Received  Transmitted")
     for p in ports:
         print(f"{p.port:2}  {p.name[:12]:12} {p.profile_name[:10]:>10}  {get_checkbox_char(not p.is_disabled)}   {get_checkbox_char(p.has_profile_override)}   {get_link_status_char(p.port_status.link_status)}  ", end="")

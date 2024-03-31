@@ -1,9 +1,7 @@
 """Implementation for 'gateway' command"""
 
 from argparse import ArgumentParser
-
 from tplink_omada_client.definitions import GatewayPortMode, PoEMode
-
 from .config import get_target_config, to_omada_connection
 from .util import dump_raw_data, get_checkbox_char, get_display_bytes, get_link_status_char, get_device_mac, get_power_char, get_target_argument
 

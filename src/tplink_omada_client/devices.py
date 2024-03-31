@@ -3,8 +3,8 @@ Definitions for Omada device objects
 
 APs, Switches and Routers
 """
-from abc import ABC, abstractmethod, abstractproperty
-from typing import Any, List, Optional, Union
+from abc import ABC, abstractmethod
+from typing import Any
 from .definitions import (
     BandwidthControl,
     DeviceStatus,
@@ -75,7 +75,7 @@ class OmadaDevice(OmadaApiData):
         return self._data["ip"]
 
     @property
-    def display_uptime(self) -> Optional[str]:
+    def display_uptime(self) -> str|None:
         """Uptime of the device, as a display string"""
         if self._data["statusCategory"] == DeviceStatusCategory.CONNECTED:
             return self._data["uptime"]
@@ -231,7 +231,7 @@ class OmadaSwitchPortStatus(OmadaApiData, OmadaPortStatus):
         return self._data["poe"]
 
     @property
-    def poe_power(self) -> Optional[float]:
+    def poe_power(self) -> float|None:
         """Power (W) supplied over PoE."""
         return self._data.get("poePower")
 
@@ -320,12 +320,12 @@ class OmadaSwitch(OmadaDetailedDevice):
         return self._data["deviceMisc"]["portNum"]
 
     @property
-    def ports(self) -> List[OmadaSwitchPort]:
+    def ports(self) -> list[OmadaSwitchPort]:
         """List of ports attached to the switch."""
         return [OmadaSwitchPort(p) for p in self._data["ports"]]
 
     @property
-    def uplink(self) -> Optional[OmadaUplink]:
+    def uplink(self) -> OmadaUplink|None:
         """ Uplink device for this switch. """
         if not "uplink" in self._data:
             return None
@@ -335,7 +335,7 @@ class OmadaSwitch(OmadaDetailedDevice):
         return OmadaUplink(uplink)
 
     @property
-    def downlink(self) -> List[OmadaDownlink]:
+    def downlink(self) -> list[OmadaDownlink]:
         """Downlink devices attached to switch."""
         if "downlinkList" in self._data:
             return [OmadaDownlink(d) for d in self._data["downlinkList"]]
@@ -419,14 +419,14 @@ class OmadaAccessPoint(OmadaDetailedDevice):
         return self._data["deviceMisc"]["supportMesh"]
 
     @property
-    def lan_port_settings(self) -> List[OmadaAccesPointLanPortSettings]:
+    def lan_port_settings(self) -> list[OmadaAccesPointLanPortSettings]:
         """Settings for the LAN ports on the access point"""
         return [
             OmadaAccesPointLanPortSettings(p) for p in self._data["lanPortSettings"]
         ]
 
     @property
-    def wired_uplink(self) -> Optional[OmadaUplink]:
+    def wired_uplink(self) -> OmadaUplink|None:
         """ Wired Uplink device for this ap. """
         uplink = self._data.get("wiredUplink", None)
         if uplink is None:
@@ -674,12 +674,12 @@ class OmadaGatewayPortStatus(OmadaApiData, OmadaPortStatus):
         return (self.wan_connected or self.ipv6_wan_connected) and self._data.get("onlineDetection", 0) != 0
 
     @property
-    def ip(self) -> Union[str, None]:
+    def ip(self) -> str|None:
         """DEPRECATED: The WAN IP of the port (for WAN ports only)"""
         return self._data.get("ip")
 
     @property
-    def wan_ip_address(self) -> Union[str, None]:
+    def wan_ip_address(self) -> str|None:
         """The WAN IPv4 Address of the port (for WAN ports only)"""
         return self._data.get("ip")
 
@@ -689,7 +689,7 @@ class OmadaGatewayPortStatus(OmadaApiData, OmadaPortStatus):
         return dict[str,Any](self._data.get("wanPortIpv6Config", {})).get("enable", 0) != 0
 
     @property
-    def wan_ipv6_address(self) -> Union[str, None]:
+    def wan_ipv6_address(self) -> str|None:
         """The WAN IPv6 Address of the port (for WAN ports only)"""
         return dict[str,Any](self._data.get("wanPortIpv6Config", {})).get("addr")
 
@@ -704,7 +704,7 @@ class OmadaGatewayPortStatus(OmadaApiData, OmadaPortStatus):
         return LinkDuplex(self._data.get("duplex", LinkDuplex.FULL))
 
     @property
-    def wan_protocol(self) -> Union[str, None]:
+    def wan_protocol(self) -> str|None:
         """May be: static, dhcp, pppoe, l2tp, pptp """
         return self._data.get("proto")
 
@@ -719,7 +719,7 @@ class OmadaGatewayPortStatus(OmadaApiData, OmadaPortStatus):
 
 class OmadaGatewayPortConfig(OmadaApiData):
 
-    def __init__(self, data: dict, poe_enabled: Union[bool, None]):
+    def __init__(self, data: dict, poe_enabled: bool|None):
         super().__init__(data)
         self._poe_enabled = poe_enabled
 
@@ -777,14 +777,14 @@ class OmadaGateway(OmadaDetailedDevice):
         return self._data["ip"]
 
     @property
-    def port_status(self) -> List[OmadaGatewayPortStatus]:
+    def port_status(self) -> list[OmadaGatewayPortStatus]:
         """Status of the gateway's ports."""
         return [
             OmadaGatewayPortStatus(p) for p in self._data["portStats"]
         ]
 
     @property
-    def port_configs(self) -> List[OmadaGatewayPortConfig]:
+    def port_configs(self) -> list[OmadaGatewayPortConfig]:
         """Configuration of the gateway's ports. Also includes status..."""
 
         poeData = {}
@@ -802,7 +802,7 @@ class OmadaGateway(OmadaDetailedDevice):
         return self._data.get("lldpEnable", False)
     
     @property
-    def echo_server(self) -> Union[str, None]:
+    def echo_server(self) -> str|None:
         return self._data.get("echoServer")
 
     @property

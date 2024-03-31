@@ -1,7 +1,7 @@
 """Internal Omada API client."""
 
 import time
-from typing import Any, AsyncIterable, Optional, Tuple
+from typing import Any, AsyncIterable
 
 import re
 from urllib.parse import urlsplit, urljoin
@@ -27,7 +27,7 @@ class OmadaApiConnection:
     _own_session: bool
     _controller_id: str
     _controller_version: str
-    _csrf_token: Optional[str]
+    _csrf_token: str|None
     _last_logon: float
 
     def __init__(
@@ -35,7 +35,7 @@ class OmadaApiConnection:
         url: str,
         username: str,
         password: str,
-        websession: Optional[ClientSession] = None,
+        websession: ClientSession|None = None,
         verify_ssl=True,
     ):
 
@@ -113,7 +113,7 @@ class OmadaApiConnection:
         return self._controller_id
 
     async def _check_login(self) -> bool:
-        if not self._csrf_token:
+        if self._csrf_token is None:
             return False
 
         if time.time() - self._last_logon < 60 * 60:
@@ -129,14 +129,14 @@ class OmadaApiConnection:
         except:  # pylint: disable=bare-except
             return False
 
-    async def _get_controller_info(self) -> Tuple[str, str]:
+    async def _get_controller_info(self) -> tuple[str, str]:
         """Get Omada controller version and Id (unauthenticated)."""
 
         response = await self._do_request("get", urljoin(self._url, "/api/info"))
 
         return (response["controllerVer"], response["omadacId"])
 
-    def format_url(self, end_point: str, site: Optional[str] = None) -> str:
+    def format_url(self, end_point: str, site: str|None = None) -> str:
         """Get a REST url for the controller action"""
 
         if site:
@@ -144,7 +144,7 @@ class OmadaApiConnection:
 
         return urljoin(self._url, f"/{self._controller_id}/api/v2/{end_point}")
 
-    async def iterate_pages(self, url: str, params: Optional[dict[str, Any]]=None) -> AsyncIterable[dict[str, Any]]:
+    async def iterate_pages(self, url: str, params: dict[str, Any]|None=None) -> AsyncIterable[dict[str, Any]]:
         """Iterates all the entries of a paged endpoint"""
         request_params = {}
         if params is not None:
@@ -167,7 +167,7 @@ class OmadaApiConnection:
             for item in data:
                 yield item
 
-    async def request(self, method: str, url: str, params=None, json=None, data: Optional[Payload] = None) -> Any:
+    async def request(self, method: str, url: str, params=None, json=None, data: Payload|None = None) -> Any:
         """Perform a request specific to the controlller, with authentication"""
 
         if not await self._check_login():
@@ -176,7 +176,7 @@ class OmadaApiConnection:
         return await self._do_request(method, url, params=params, json=json, data=data)
        
     async def _do_request(
-        self, method: str, url: str, params=None, json=None, data: Optional[Payload] = None
+        self, method: str, url: str, params=None, json=None, data: Payload|None = None
     ) -> Any:
         """Perform a request on the controller, and unpack the response."""
 

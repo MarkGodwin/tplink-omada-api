@@ -1,6 +1,6 @@
 """ Simple Http client for Omada controller REST api. """
 import os
-from typing import NamedTuple, Optional, Union
+from typing import NamedTuple
 from aiohttp import MultipartWriter
 from aiohttp.client import ClientSession
 from multidict import CIMultiDict
@@ -37,7 +37,7 @@ class OmadaClient:
         url: str,
         username: str,
         password: str,
-        websession: Optional[ClientSession] = None,
+        websession: ClientSession|None = None,
         verify_ssl=True,
     ):
         self._api = OmadaApiConnection(url, username, password, websession, verify_ssl)
@@ -75,7 +75,7 @@ class OmadaClient:
         sites = [OmadaSite(s["name"], s["key"]) for s in response["privilege"]["sites"]]
         return sites
 
-    async def get_site_client(self, site: Union[str, OmadaSite]) -> OmadaSiteClient:
+    async def get_site_client(self, site: str|OmadaSite) -> OmadaSiteClient:
         """Get a client that can query the specified Omada site."""
         if isinstance(site, OmadaSite):
             site_id = site.id
