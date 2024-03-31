@@ -1,9 +1,18 @@
+"""TP-Link Omada API Client"""
+
 from .devices import OmadaSwitchPortDetails
 from .omadaclient import OmadaClient, OmadaSite
-from .omadasiteclient import OmadaSiteClient, SwitchPortOverrides, AccessPointPortSettings, GatewayPortSettings, OmadaClientSettings, OmadaClientFixedAddress
+from .omadasiteclient import (
+    OmadaSiteClient,
+    SwitchPortOverrides,
+    AccessPointPortSettings,
+    GatewayPortSettings,
+    OmadaClientSettings,
+    OmadaClientFixedAddress,
+)
 from . import definitions
 from . import exceptions
-from . import clients 
+from . import clients
 
 __all__ = [
     "OmadaClient",
@@ -17,5 +26,5 @@ __all__ = [
     "OmadaSwitchPortDetails",
     "definitions",
     "exceptions",
-    "clients"
-    ]
+    "clients",
+]

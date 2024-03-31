@@ -1,4 +1,4 @@
-""" Exceptions that the library might throw. """
+"""Exceptions that the library might throw."""
 
 
 class OmadaClientException(Exception):

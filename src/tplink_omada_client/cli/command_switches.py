@@ -1,9 +1,9 @@
 """Implementation for 'switches' command"""
 
 from argparse import _SubParsersAction
-
 from .config import get_target_config, to_omada_connection
 from .util import dump_raw_data, get_link_status_char, get_power_char, get_target_argument
+
 
 async def command_switches(args) -> int:
     """Executes 'switches' command"""
@@ -25,11 +25,9 @@ async def command_switches(args) -> int:
             dump_raw_data(args, switch)
     return 0
 
+
 def arg_parser(subparsers: _SubParsersAction) -> None:
     """Configures arguments parser for 'switches' command"""
-    switches_parser = subparsers.add_parser(
-        "switches",
-        aliases=['s'],
-        help="Lists switches managed by Omada Controller")
+    switches_parser = subparsers.add_parser("switches", aliases=["s"], help="Lists switches managed by Omada Controller")
     switches_parser.set_defaults(func=command_switches)
-    switches_parser.add_argument('-d', '--dump', help="Output raw device information",  action='store_true')
+    switches_parser.add_argument("-d", "--dump", help="Output raw device information", action="store_true")

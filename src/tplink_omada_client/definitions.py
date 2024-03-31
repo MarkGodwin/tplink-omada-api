@@ -1,28 +1,30 @@
-""" Definitions for Omada enums. """
+"""Definitions for Omada enums."""
 
 from abc import ABC
 from enum import IntEnum
 from typing import Any
 
+
 class OmadaApiData(ABC):
+    """Base representation of Omada API data."""
+
     def __init__(self, data: dict[str, Any]):
         self._data = data
 
     def __repr__(self) -> str:
-        repr = self.__class__.__name__
-        repr += "{"
+        repr_str = self.__class__.__name__
+        repr_str += "{"
         for name in self.__dir__():
-            if (
-                not name.startswith("_")
-                and name != "raw_data"
-            ):
-                repr += f"{name}={getattr(self, name)},"
-        repr += "}"
-        return repr
+            if not name.startswith("_") and name != "raw_data":
+                repr_str += f"{name}={getattr(self, name)},"
+        repr_str += "}"
+        return repr_str
 
     @property
     def raw_data(self) -> dict[str, Any]:
+        """Raw data obtained from Omada API."""
         return self._data
+
 
 class DeviceStatus(IntEnum):
     """Known status codes for devices."""
@@ -70,18 +72,23 @@ class PortType(IntEnum):
     COMBO = 2
     SFP = 3
 
+
 class GatewayPortType(IntEnum):
     """Known types of gateway port."""
+
     WAN = 0
     WAN_LAN = 1
     LAN = 2
     SFP_WAN = 3
 
+
 class GatewayPortMode(IntEnum):
     """Modes of gateway port."""
+
     DISABLED = -1
     WAN = 0
     LAN = 1
+
 
 class LinkStatus(IntEnum):
     """Known link statuses."""
@@ -133,39 +140,49 @@ class PoEMode(IntEnum):
     ENABLED = 1
     USE_DEVICE_SETTINGS = 2
 
+
 class AuthenticationStatus:
-    """ Client authentication status. """
+    """Client authentication status."""
+
     CONNECTED = 0
     PENDING = 1
     AUTHORIZED = 2
     AUTH_FREE = 3
 
+
 class ConnectType(IntEnum):
-    """ Client connection types. """
+    """Client connection types."""
+
     GUEST_WIRELESS = 0
     WIRELESS = 1
     WIRED = 2
 
+
 class RadioId(IntEnum):
-    """ WiFi radio frequencies """
+    """WiFi radio frequencies"""
+
     FREQ_2_4 = 0
     FREQ_5_1 = 1
     FREQ_5_2 = 2
-    FREQ_6   = 3
+    FREQ_6 = 3
+
 
 class WifiMode(IntEnum):
-    """ WiFi modes. """
-    A   = 0
-    B   = 1
-    G   = 2
-    NA  = 3
-    NG  = 4
-    AC  = 5
+    """WiFi modes."""
+
+    A = 0
+    B = 1
+    G = 2
+    NA = 3
+    NG = 4
+    AC = 5
     AXA = 6
     AXG = 7
 
+
 class LedSetting(IntEnum):
-    """ LED Setting """
-    OFF           = 0
-    ON            = 1
+    """LED Setting"""
+
+    OFF = 0
+    ON = 1
     SITE_SETTINGS = 2

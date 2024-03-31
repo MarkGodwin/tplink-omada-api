@@ -8,6 +8,8 @@ A basic Python client for calling the TP-Link Omada controller API.
 pip install tplink-omada-client
 ```
 
+Note: Version 1.4 and later requires Python 3.11.
+
 ## Supported features
 
 Only a subset of the controller's features are supported:

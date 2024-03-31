@@ -1,9 +1,9 @@
 """Implementation for 'access-points' command"""
 
 from argparse import _SubParsersAction
-
 from .config import get_target_config, to_omada_connection
 from .util import dump_raw_data, get_checkbox_char, get_target_argument
+
 
 async def command_access_points(args) -> int:
     """Executes 'access-points' command"""
@@ -24,11 +24,9 @@ async def command_access_points(args) -> int:
             dump_raw_data(args, access_point)
     return 0
 
+
 def arg_parser(subparsers: _SubParsersAction) -> None:
     """Configures arguments parser for 'access-points' command"""
-    parser = subparsers.add_parser(
-        "access-points",
-        aliases=['ap'],
-        help="Lists access points managed by Omada Controller")
+    parser = subparsers.add_parser("access-points", aliases=["ap"], help="Lists access points managed by Omada Controller")
     parser.set_defaults(func=command_access_points)
-    parser.add_argument('-d', '--dump', help="Output raw device information",  action='store_true')
+    parser.add_argument("-d", "--dump", help="Output raw device information", action="store_true")

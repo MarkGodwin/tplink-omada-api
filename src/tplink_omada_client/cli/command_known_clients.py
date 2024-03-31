@@ -5,6 +5,7 @@ from datetime import datetime
 from .config import get_target_config, to_omada_connection
 from .util import dump_raw_data, get_target_argument
 
+
 async def command_known_clients(args) -> int:
     """Executes 'known-clients' command"""
     controller = get_target_argument(args)
@@ -27,11 +28,10 @@ async def command_known_clients(args) -> int:
 
     return 0
 
+
 def arg_parser(subparsers: _SubParsersAction) -> None:
     """Configures arguments parser for 'known-clients' command"""
-    known_clients_parser = subparsers.add_parser(
-        "known-clients",
-        help="Lists all clients known to the Omada controller")
-    known_clients_parser.add_argument('-d', '--dump', help="Output raw client information",  action='store_true')
+    known_clients_parser = subparsers.add_parser("known-clients", help="Lists all clients known to the Omada controller")
+    known_clients_parser.add_argument("-d", "--dump", help="Output raw client information", action="store_true")
 
     known_clients_parser.set_defaults(func=command_known_clients)
