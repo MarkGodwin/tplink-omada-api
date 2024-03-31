@@ -1,4 +1,5 @@
-""" Omada CLI """
+"""TP-Link Omada CLI"""
+
 import argparse
 import asyncio
 import sys
@@ -30,20 +31,17 @@ from . import (
     command_wan,
 )
 
-def main(argv: Sequence[str]|None = None) -> int:
+
+def main(argv: Sequence[str] | None = None) -> int:
     """Entry point for Omada CLI"""
     if argv is None:
         argv = sys.argv[1:]
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '-t', '--target',
-        help="The target Omada controller",
-        default=""
-    )
+    parser.add_argument("-t", "--target", help="The target Omada controller", default="")
 
     subparsers = parser.add_subparsers(
-        title='Available commands',
-        metavar='command',
+        title="Available commands",
+        metavar="command",
     )
 
     command_access_point.arg_parser(subparsers)
