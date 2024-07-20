@@ -362,17 +362,17 @@ class OmadaAccesPointLanPortSettings(OmadaApiData):
     @property
     def local_vlan_enable(self) -> bool:
         """True if VLAN tagging is enabled for the port explicitly"""
-        return self._data["localVlanEnable"]
+        return self._data.get("localVlanEnable", False)
 
     @property
     def local_vlan_id(self) -> int:
         """VLAN ID for this port"""
-        return self._data["localVlanId"]
+        return self._data.get("localVlanId", -1)
 
     @property
     def supports_poe(self) -> bool:
         """True if the port supports PoE output"""
-        return self._data["supportPoe"]
+        return self._data.get("supportPoe", False)
 
     @property
     def poe_enable(self) -> bool:
