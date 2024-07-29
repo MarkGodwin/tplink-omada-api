@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "tplink_omada_client"
 version = "1.4.1"
 authors = [
-  { name="Mark Godwin", email="author@example.com" },
+  { name="Mark Godwin", },
 ]
 description = "Python wrapper for TP-Link Omada SDN Controller API (OC200/OC300/Software Controller)"
 readme = "README.md"
