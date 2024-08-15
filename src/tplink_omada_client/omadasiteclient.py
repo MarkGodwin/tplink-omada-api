@@ -181,17 +181,19 @@ class OmadaSiteClient:
         async for client in self._api.iterate_pages(
             self._api.format_url("clients", self._site_id), {"filters.active": "false"}
         ):
-            if client["wireless"]:
+            is_wireless = client.get("wireless")
+            if is_wireless:
                 yield OmadaWirelessClient(client)
-            else:
+            elif is_wireless is False:
                 yield OmadaWiredClient(client)
 
     async def get_known_clients(self) -> AsyncIterable[OmadaNetworkClient]:
         """Get the clients connected to the site network."""
         async for client in self._api.iterate_pages(self._api.format_url("insight/clients", self._site_id)):
-            if client["wireless"]:
+            is_wireless = client.get("wireless")
+            if is_wireless:
                 yield OmadaWirelessClient(client)
-            else:
+            elif is_wireless is False:
                 yield OmadaWiredClient(client)
 
     async def get_devices(self) -> list[OmadaListDevice]:
