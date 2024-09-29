@@ -29,6 +29,7 @@ class OmadaApiData(ABC):
 class DeviceStatus(IntEnum):
     """Known status codes for devices."""
 
+    UNKNOWN = -1
     DISCONNECTED = 0
     DISCONNECTED_MIGRATING = 1
     PROVISIONING = 10
@@ -54,32 +55,51 @@ class DeviceStatus(IntEnum):
     ISOLATED = 40
     ISOLATED_MIGRATING = 41
 
+    @classmethod
+    def _missing_(cls, _):
+        return DeviceStatus.UNKNOWN
+
 
 class DeviceStatusCategory(IntEnum):
     """Known status categories for devices"""
 
+    UNKNOWN = -1
     DISCONNECTED = 0
     CONNECTED = 1
     PENDING = 2
     HEARTBEAT_MISSED = 3
     ISOLATED = 4
 
+    @classmethod
+    def _missing_(cls, _):
+        return DeviceStatusCategory.UNKNOWN
+
 
 class PortType(IntEnum):
     """Known types of switch port."""
 
+    UNKNOWN = -1
     COPPER = 1
     COMBO = 2
     SFP = 3
+
+    @classmethod
+    def _missing_(cls, _):
+        return PortType.UNKNOWN
 
 
 class GatewayPortType(IntEnum):
     """Known types of gateway port."""
 
+    UNKNOWN = -1
     WAN = 0
     WAN_LAN = 1
     LAN = 2
     SFP_WAN = 3
+
+    @classmethod
+    def _missing_(cls, _):
+        return GatewayPortType.UNKNOWN
 
 
 class GatewayPortMode(IntEnum):
@@ -89,17 +109,27 @@ class GatewayPortMode(IntEnum):
     WAN = 0
     LAN = 1
 
+    @classmethod
+    def _missing_(cls, _):
+        return GatewayPortMode.DISABLED
+
 
 class LinkStatus(IntEnum):
     """Known link statuses."""
 
+    UNKNOWN = -1
     LINK_DOWN = 0
     LINK_UP = 1
+
+    @classmethod
+    def _missing_(cls, _):
+        return LinkStatus.UNKNOWN
 
 
 class LinkSpeed(IntEnum):
     """Known link speeds."""
 
+    UNKNOWN = -1
     SPEED_AUTO = 0
     SPEED_10_MBPS = 1
     SPEED_100_MBPS = 2
@@ -107,29 +137,48 @@ class LinkSpeed(IntEnum):
     SPEED_2_5_GBPS = 4
     SPEED_10_GBPS = 5
 
+    @classmethod
+    def _missing_(cls, _):
+        return LinkSpeed.UNKNOWN
+
 
 class LinkDuplex(IntEnum):
     """Known link duplex modes"""
 
+    UNKNOWN = -1
     AUTO = 0
     HALF = 1
     FULL = 2
+
+    @classmethod
+    def _missing_(cls, _):
+        return LinkDuplex.UNKNOWN
 
 
 class Eth802Dot1X(IntEnum):
     """802.1x auth modes."""
 
+    UNKNOWN = -1
     FORCE_UNAUTHORIZED = 0
     FORCE_AUTHORIZED = 1
     AUTO = 2
+
+    @classmethod
+    def _missing_(cls, _):
+        return Eth802Dot1X.UNKNOWN
 
 
 class BandwidthControl(IntEnum):
     """Modes of bandwidth control."""
 
+    UNKNOWN = -1
     OFF = 0
     RATE_LIMIT = 1
     STORM_CONTROL = 2
+
+    @classmethod
+    def _missing_(cls, _):
+        return BandwidthControl.UNKNOWN
 
 
 class PoEMode(IntEnum):
@@ -140,36 +189,56 @@ class PoEMode(IntEnum):
     ENABLED = 1
     USE_DEVICE_SETTINGS = 2
 
+    @classmethod
+    def _missing_(cls, _):
+        return PoEMode.NONE
+
 
 class AuthenticationStatus:
     """Client authentication status."""
 
+    UNKNOWN = -1
     CONNECTED = 0
     PENDING = 1
     AUTHORIZED = 2
     AUTH_FREE = 3
 
+    @classmethod
+    def _missing_(cls, _):
+        return AuthenticationStatus.UNKNOWN
+
 
 class ConnectType(IntEnum):
     """Client connection types."""
 
+    UNKNOWN = -1
     GUEST_WIRELESS = 0
     WIRELESS = 1
     WIRED = 2
+
+    @classmethod
+    def _missing_(cls, _):
+        return ConnectType.UNKNOWN
 
 
 class RadioId(IntEnum):
     """WiFi radio frequencies"""
 
+    UNKNOWN = -1
     FREQ_2_4 = 0
     FREQ_5_1 = 1
     FREQ_5_2 = 2
     FREQ_6 = 3
 
+    @classmethod
+    def _missing_(cls, _):
+        return RadioId.UNKNOWN
+
 
 class WifiMode(IntEnum):
     """WiFi modes."""
 
+    UNKNOWN = -1
     A = 0
     B = 1
     G = 2
@@ -179,10 +248,19 @@ class WifiMode(IntEnum):
     AXA = 6
     AXG = 7
 
+    @classmethod
+    def _missing_(cls, _):
+        return WifiMode.UNKNOWN
+
 
 class LedSetting(IntEnum):
     """LED Setting"""
 
+    UNKNOWN = -1
     OFF = 0
     ON = 1
     SITE_SETTINGS = 2
+
+    @classmethod
+    def _missing_(cls, _):
+        return LedSetting.UNKNOWN

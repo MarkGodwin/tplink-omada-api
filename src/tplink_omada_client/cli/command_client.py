@@ -2,7 +2,7 @@
 
 from argparse import _SubParsersAction, ArgumentError
 import datetime
-from tplink_omada_client.clients import OmadaWiredClientDetails, OmadaWirelessClientDetails
+from tplink_omada_client.clients import OmadaConnectedClient, OmadaWiredClientDetails, OmadaWirelessClientDetails
 from tplink_omada_client.omadasiteclient import OmadaClientFixedAddress, OmadaClientSettings
 from .config import get_target_config, to_omada_connection
 from .util import dump_raw_data, get_client_mac, get_target_argument
@@ -40,10 +40,11 @@ async def command_client(args) -> int:
     return 0
 
 
-def print_client(client):
+def print_client(client: OmadaConnectedClient):
     """Prints details of a client to the console."""
     print(f"Name: {client.name}")
     print(f"MAC: {client.mac}")
+    print(f"Connection type: {client.connect_type.name}")
     if client.ip:
         print(f"IP: {client.ip}")
     if client.host_name:
