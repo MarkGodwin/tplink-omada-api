@@ -129,6 +129,14 @@ class OmadaSiteClient:
             mac = mac_or_client
         await self._api.request("post", self._api.format_url(f"cmd/clients/{mac}/unblock", self._site_id))
 
+    async def reconnect_client(self, mac_or_client: str | OmadaNetworkClient) -> None:
+        """Reconnect the specified client."""
+        if isinstance(mac_or_client, OmadaConnectedClient):
+            mac = mac_or_client.mac
+        else:
+            mac = mac_or_client
+        await self._api.request("post", self._api.format_url(f"cmd/clients/{mac}/reconnect", self._site_id))
+
     async def get_client(self, mac_or_client: str | OmadaNetworkClient) -> OmadaClientDetails:
         """Get the details of a client"""
         if isinstance(mac_or_client, OmadaConnectedClient):
