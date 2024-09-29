@@ -79,7 +79,7 @@ class OmadaConnectedClient(OmadaNetworkClient):
     @property
     def connect_type(self) -> ConnectType:
         """Connection type"""
-        return self._data["connectType"]
+        return ConnectType(self._data["connectType"])
 
     @property
     def device_type(self) -> str:
@@ -276,7 +276,7 @@ class OmadaWirelessClient(OmadaConnectedClient):
     @property
     def radio_id(self) -> RadioId:
         """Radio frequency id"""
-        return self._data["radioId"]
+        return RadioId(self._data["radioId"])
 
     @property
     def rssi(self) -> int:
@@ -311,7 +311,7 @@ class OmadaWirelessClient(OmadaConnectedClient):
     @property
     def wifi_mode(self) -> WifiMode:
         """WiFi mode"""
-        return self._data["wifiMode"]
+        return WifiMode(self._data["wifiMode"])
 
 
 class OmadaWirelessClientDetails(OmadaWirelessClient, OmadaClientDetails):
