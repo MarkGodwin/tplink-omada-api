@@ -92,7 +92,7 @@ class OmadaDevice(OmadaApiData):
     def mem_usage(self) -> int:
         """Current memory usage of the device."""
         if self._data["statusCategory"] == DeviceStatusCategory.CONNECTED:
-            return self._data["memUtil"]
+            return self._data.get("memUtil", 0)
         else:
             return 0
 
