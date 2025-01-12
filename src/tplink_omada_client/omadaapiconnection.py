@@ -142,19 +142,20 @@ class OmadaApiConnection:
         request_params = {}
         if params is not None:
             request_params.update(params)
-        request_params["currentPageSize"] = _PAGE_SIZE
+        actual_page_size = _PAGE_SIZE
 
         current_page = 1
         has_next = True
         while has_next:
+            request_params["currentPageSize"] = actual_page_size
             request_params["currentPage"] = current_page
             response = await self.request("get", url, request_params)
 
             # Setup next page request
-            current_page = int(response["currentPage"]) + 1
-            current_size = int(response["currentSize"])
+            actual_page_size = int(response["currentSize"])
             total_rows = int(response["totalRows"])
-            has_next = total_rows > current_page * current_size
+            has_next = total_rows > current_page * actual_page_size
+            current_page += 1
 
             data: list[dict[str, Any]] = response["data"]
             for item in data:
