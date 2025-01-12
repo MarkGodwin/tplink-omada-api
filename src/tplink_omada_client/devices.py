@@ -84,7 +84,7 @@ class OmadaDevice(OmadaApiData):
     def cpu_usage(self) -> int:
         """Currenct CPU usage of the device."""
         if self._data["statusCategory"] == DeviceStatusCategory.CONNECTED:
-            return self._data["cpuUtil"]
+            return self._data.get("cpuUtil", 0)
         else:
             return 0
 
