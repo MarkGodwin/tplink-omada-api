@@ -3,6 +3,8 @@
 from typing import AsyncIterable
 from dataclasses import dataclass
 
+from awesomeversion import AwesomeVersion
+
 from .clients import (
     OmadaClientDetails,
     OmadaConnectedClient,
@@ -44,21 +46,23 @@ from .omadaapiconnection import OmadaApiConnection
 class SwitchPortOverrides:
     """
     Overrides that can be applied to a switch port.
+    Leaving these as None should leave the existing setting unchanged.
 
-    Currently, we don't support bandwidth limits and mirroring modes.
-    Due to the way the API works, we have to specify overrides for everything,
-    we can't just override a single profile setting. Therefore, you may need to
-    initialise all of these parameters to avoid overwriting settings.
+    Currently, we don't support bandwidth limits and mirroring modes, these WILL get reset regardless
     """
 
-    enable_poe: bool = True
-    dot1x_mode: Eth802Dot1X = Eth802Dot1X.FORCE_AUTHORIZED
-    duplex: LinkDuplex = LinkDuplex.AUTO
-    link_speed: LinkSpeed = LinkSpeed.SPEED_AUTO
-    lldp_med_enable: bool = True
-    loopback_detect: bool = True
-    spanning_tree_enable: bool = False
-    port_isolation: bool = False
+    enable_poe: bool | None = None
+    dot1x_mode: Eth802Dot1X | None = None
+    duplex: LinkDuplex | None = None
+    link_speed: LinkSpeed | None = None
+    lldp_med_enable: bool | None = None
+    loopback_detect: bool | None = None
+    spanning_tree_enable: bool | None = None
+    port_isolation: bool | None = None
+    loopback_detect_vlan_based: bool | None = None
+    voice_network: bool | None = None
+    flow_control: bool | None = None
+    eee: bool | None = None
 
 
 @dataclass
@@ -301,7 +305,7 @@ class OmadaSiteClient:
 
         return OmadaSwitchPortDetails(result)
 
-    async def get_switch_port_overrides(
+    async def get_switch_port_settings(
         self,
         mac_or_device: str | OmadaDevice,
         index_or_port: int | OmadaSwitchPort,
@@ -310,36 +314,50 @@ class OmadaSiteClient:
 
         port = await self.get_switch_port(mac_or_device, index_or_port)
 
-        # Returns the current overrides
-        if port.has_profile_override:
-            return SwitchPortOverrides(
-                enable_poe=(port.poe_mode == PoEMode.ENABLED),
-                dot1x_mode=port.eth_802_1x_control,
-                duplex=port.duplex,
-                link_speed=port.link_speed,
-                lldp_med_enable=port.lldp_med_enabled,
-                loopback_detect=port.loopback_detect_enabled,
-                spanning_tree_enable=port.spanning_tree_enabled,
-                port_isolation=port.port_isolation_enabled,
-            )
+        result = SwitchPortOverrides(link_speed=port.link_speed)
+        if port.has_voice_network:
+            result.voice_network = port.voice_network_enabled
 
-        # Otherwise the profile's config values are returned
+        # Return the current settings based on the overrides if they exist
+        if port.has_profile_override:
+            result.enable_poe = port.poe_mode == PoEMode.ENABLED
+            result.dot1x_mode = port.eth_802_1x_control
+            result.duplex = port.duplex
+            result.link_speed = port.link_speed
+            result.lldp_med_enable = port.lldp_med_enabled
+            result.loopback_detect = port.loopback_detect_enabled
+            result.spanning_tree_enable = port.spanning_tree_enabled
+            result.port_isolation = port.port_isolation_enabled
+            if port.has_eee:
+                result.eee = port.eee_enabled
+            if port.has_flow_control:
+                result.flow_control = port.flow_control_enabled
+            if port.has_loopback_detect_vlan_based:
+                result.loopback_detect_vlan_based = port.loopback_detect_vlan_based_enabled
+
+            return result
+
+        # Otherwise the profile's config values are used to augment the port settings
         prof = await self.get_port_profile(port.profile_id)
 
-        # The API doesn't provide the PoE mode of the switch (couldn't even find in Omada
-        # GUI how to set the PoE mode of a switch). Thus, use True as a default value.
         poe_mode = prof.poe_mode != PoEMode.DISABLED
 
-        return SwitchPortOverrides(
-            enable_poe=poe_mode,
-            dot1x_mode=prof.eth_802_1x_control,
-            duplex=LinkDuplex.AUTO,
-            link_speed=LinkSpeed.SPEED_AUTO,
-            lldp_med_enable=prof.lldp_med_enabled,
-            loopback_detect=prof.loopback_detect_enabled,
-            spanning_tree_enable=prof.spanning_tree_enabled,
-            port_isolation=prof.port_isolation_enabled,
-        )
+        result.enable_poe = poe_mode
+        result.dot1x_mode = prof.eth_802_1x_control
+        result.duplex = port.duplex
+        result.link_speed = port.link_speed
+        result.lldp_med_enable = prof.lldp_med_enabled
+        result.loopback_detect = prof.loopback_detect_enabled
+        result.spanning_tree_enable = prof.spanning_tree_enabled
+        result.port_isolation = prof.port_isolation_enabled
+        if prof.has_eee:
+            result.eee = prof.eee_enabled
+        if prof.has_flow_control:
+            result.flow_control = prof.flow_control_enabled
+        if prof.has_loopback_detect_vlan_based:
+            result.loopback_detect_vlan_based = prof.loopback_detect_vlan_based_enabled
+
+        return result
 
     async def update_access_point_port(
         self,
@@ -404,17 +422,52 @@ class OmadaSiteClient:
             "profileOverrideEnable": overrides is not None,
         }
         if overrides:
+            existing_settings = await self.get_switch_port_settings(mac, port)
+
+            # Hacks
             payload["operation"] = "switching"
             payload["bandWidthCtrlType"] = BandwidthControl.OFF
-            payload["poe"] = PoEMode.ENABLED if overrides.enable_poe else PoEMode.DISABLED
-            payload["dot1x"] = overrides.dot1x_mode
-            payload["duplex"] = overrides.duplex
-            payload["linkSpeed"] = overrides.link_speed
-            payload["lldpMedEnable"] = overrides.lldp_med_enable
-            payload["loopbackDetectEnable"] = overrides.loopback_detect
-            payload["spanningTreeEnable"] = overrides.spanning_tree_enable
-            payload["portIsolationEnable"] = overrides.port_isolation
-            payload["topoNotifyEnable"] = False
+
+            enable_poe = overrides.enable_poe if overrides.enable_poe is not None else existing_settings.enable_poe
+            payload["poe"] = PoEMode.ENABLED if enable_poe else PoEMode.DISABLED
+            payload["dot1x"] = overrides.dot1x_mode if overrides.dot1x_mode is not None else existing_settings.dot1x_mode
+            payload["duplex"] = overrides.duplex if overrides.duplex is not None else existing_settings.duplex
+            payload["linkSpeed"] = overrides.link_speed if overrides.link_speed is not None else existing_settings.link_speed
+            payload["lldpMedEnable"] = (
+                overrides.lldp_med_enable if overrides.lldp_med_enable is not None else existing_settings.lldp_med_enable
+            )
+            payload["loopbackDetectEnable"] = (
+                overrides.loopback_detect if overrides.loopback_detect is not None else existing_settings.loopback_detect
+            )
+            payload["spanningTreeEnable"] = (
+                overrides.spanning_tree_enable
+                if overrides.spanning_tree_enable is not None
+                else existing_settings.spanning_tree_enable
+            )
+            payload["portIsolationEnable"] = (
+                overrides.port_isolation if overrides.port_isolation is not None else existing_settings.port_isolation
+            )
+            if (await self._api.get_controller_version()) < AwesomeVersion("6"):
+                # Possibly no longer valid
+                payload["topoNotifyEnable"] = False
+            else:
+                # Settings that might be non-optional in 6.0+ versions
+                eee = overrides.eee if overrides.eee is not None else existing_settings.eee
+                if eee is not None:
+                    payload["eeeEnable"] = eee
+                fce = overrides.flow_control if overrides.flow_control is not None else existing_settings.flow_control
+                if fce is not None:
+                    payload["flowControlEnable"] = fce
+                vne = overrides.voice_network if overrides.voice_network is not None else existing_settings.voice_network
+                if vne is not None:
+                    payload["voiceNetworkEnable"] = vne
+                ldvbe = (
+                    overrides.loopback_detect_vlan_based
+                    if overrides.loopback_detect_vlan_based is not None
+                    else existing_settings.loopback_detect_vlan_based
+                )
+                if ldvbe is not None:
+                    payload["loopbackDetectVlanBasedEnable"] = ldvbe
 
         await self._api.request(
             "patch",

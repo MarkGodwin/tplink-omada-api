@@ -27,7 +27,7 @@ class OmadaApiConnection:
 
     _own_session: bool
     _controller_id: str
-    _controller_version: str
+    _controller_version: str | None = None
     _csrf_token: str | None
     _last_logon: float
 
@@ -92,7 +92,7 @@ class OmadaApiConnection:
         version, controller_id = await self._get_controller_info()
 
         if AwesomeVersion(version) < AwesomeVersion("5.1.0"):
-            raise UnsupportedControllerVersion(self._controller_version)
+            raise UnsupportedControllerVersion(version)
 
         self._controller_id = controller_id
         self._controller_version = version
@@ -168,6 +168,13 @@ class OmadaApiConnection:
             await self.login()
 
         return await self._do_request(method, url, params=params, json=json, data=data)
+
+    async def get_controller_version(self) -> AwesomeVersion:
+        """Get the controller version as an AwesomeVersion object."""
+        version = self._controller_version
+        if version is None:
+            version, _ = await self._get_controller_info()
+        return AwesomeVersion(version)
 
     async def _do_request(self, method: str, url: str, params=None, json=None, data: Payload | None = None) -> Any:
         """Perform a request on the controller, and unpack the response."""

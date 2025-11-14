@@ -501,27 +501,67 @@ class OmadaSwitchPortDetails(OmadaSwitchPort):
     @property
     def lldp_med_enabled(self) -> bool:
         """LLDP Mode"""
-        return self._data["lldpMedEnable"]
+        return self._data.get("lldpMedEnable", False)
 
     @property
     def topology_notify_enabled(self) -> bool:
         """Topology notify mode"""
-        return self._data["topoNotifyEnable"]
+        return self._data.get("topoNotifyEnable", False)
 
     @property
     def spanning_tree_enabled(self) -> bool:
         """Spanning tree loopback control"""
-        return self._data["spanningTreeEnable"]
+        return self._data.get("spanningTreeEnable", False)
 
     @property
     def loopback_detect_enabled(self) -> bool:
         """Loopback detection"""
-        return self._data["loopbackDetectEnable"]
+        return self._data.get("loopbackDetectEnable", False)
 
     @property
     def port_isolation_enabled(self) -> bool:
         """Port isolation (Danger!)"""
-        return self._data["portIsolationEnable"]
+        return self._data.get("portIsolationEnable", False)
+
+    @property
+    def loopback_detect_vlan_based_enabled(self) -> bool:
+        """VLAN based loopback detection"""
+        return self._data.get("loopbackDetectVlanBasedEnable", False)
+
+    @property
+    def has_loopback_detect_vlan_based(self) -> bool:
+        """True if VLAN based loopback detection settings are available for this port"""
+        return "loopbackDetectVlanBasedEnable" in self._data
+
+    @property
+    def voice_network_enabled(self) -> bool:
+        """Voice network enabled"""
+        return self._data.get("voiceNetworkEnable", False)
+
+    @property
+    def has_voice_network(self) -> bool:
+        """True if Voice Network settings are available for this port"""
+        return "voiceNetworkEnable" in self._data
+
+    @property
+    def flow_control_enabled(self) -> bool:
+        """Flow control enabled"""
+        return self._data.get("flowControlEnable", False)
+
+    @property
+    def has_flow_control(self) -> bool:
+        """True if Flow Control settings are available for this port"""
+        return "flowControlEnable" in self._data
+
+    @property
+    def eee_enabled(self) -> bool:
+        """Energy Efficient Ethernet enabled"""
+        return self._data.get("eeeEnable", False)
+
+    @property
+    def has_eee(self) -> bool:
+        """True if EEE settings are available for this port"""
+        return "eeeEnable" in self._data
 
 
 class OmadaPortProfile(OmadaApiData):
@@ -560,27 +600,57 @@ class OmadaPortProfile(OmadaApiData):
     @property
     def lldp_med_enabled(self) -> bool:
         """LLDP Mode"""
-        return self._data["lldpMedEnable"]
+        return self._data.get("lldpMedEnable", False)
 
     @property
     def topology_notify_enabled(self) -> bool:
         """Topology notify mode"""
-        return self._data["topoNotifyEnable"]
+        return self._data.get("topoNotifyEnable", False)
 
     @property
     def spanning_tree_enabled(self) -> bool:
         """Spanning tree loopback control"""
-        return self._data["spanningTreeEnable"]
+        return self._data.get("spanningTreeEnable", False)
 
     @property
     def loopback_detect_enabled(self) -> bool:
         """Loopback detection"""
-        return self._data["loopbackDetectEnable"]
+        return self._data.get("loopbackDetectEnable", False)
 
     @property
     def port_isolation_enabled(self) -> bool:
         """Port isolation (Danger!)"""
-        return self._data["portIsolationEnable"]
+        return self._data.get("portIsolationEnable", False)
+
+    @property
+    def loopback_detect_vlan_based_enabled(self) -> bool:
+        """VLAN based loopback detection"""
+        return self._data.get("loopbackDetectVlanBasedEnable", False)
+
+    @property
+    def has_loopback_detect_vlan_based(self) -> bool:
+        """True if VLAN based loopback detection settings are available for this profile"""
+        return "loopbackDetectVlanBasedEnable" in self._data
+
+    @property
+    def flow_control_enabled(self) -> bool:
+        """Flow control enabled"""
+        return self._data.get("flowControlEnable", False)
+
+    @property
+    def has_flow_control(self) -> bool:
+        """True if Flow Control settings are available for this profile"""
+        return "flowControlEnable" in self._data
+
+    @property
+    def eee_enabled(self) -> bool:
+        """Energy Efficient Ethernet enabled"""
+        return self._data.get("eeeEnable", False)
+
+    @property
+    def has_eee(self) -> bool:
+        """True if EEE settings are available for this profile"""
+        return "eeeEnable" in self._data
 
 
 class OmadaInterfaceDetails(OmadaApiData):

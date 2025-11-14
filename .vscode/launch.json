@@ -10,7 +10,9 @@
             "request": "launch",
             "module": "tplink_omada_client.cli",
             "justMyCode": true,
-            "args": ["devices"]
+            "args": [
+                "devices"
+            ]
         },
         {
             "name": "CLI: List Targets",
@@ -18,7 +20,9 @@
             "request": "launch",
             "module": "tplink_omada_client.cli",
             "justMyCode": true,
-            "args": ["targets"]
+            "args": [
+                "targets"
+            ]
         },
         {
             "name": "CLI: Update Target",
@@ -26,7 +30,12 @@
             "request": "launch",
             "module": "tplink_omada_client.cli",
             "justMyCode": true,
-            "args": ["--target", "OC200b", "target", "--no-verify-ssl"]
+            "args": [
+                "--target",
+                "OC200b",
+                "target",
+                "--no-verify-ssl"
+            ]
         },
         {
             "name": "CLI: List Switches",
@@ -34,7 +43,9 @@
             "request": "launch",
             "module": "tplink_omada_client.cli",
             "justMyCode": true,
-            "args": ["switches"]
+            "args": [
+                "switches"
+            ]
         },
         {
             "name": "CLI: Get Switch",
@@ -42,7 +53,11 @@
             "request": "launch",
             "module": "tplink_omada_client.cli",
             "justMyCode": true,
-            "args": ["switch", "Main Switch", "--dump"]
+            "args": [
+                "switch",
+                "Main Switch",
+                "--dump"
+            ]
         },
         {
             "name": "CLI: Get Switch Ports",
@@ -50,7 +65,13 @@
             "request": "launch",
             "module": "tplink_omada_client.cli",
             "justMyCode": true,
-            "args": ["switch_ports", "Main Switch", "-t", "-p", "5"]
+            "args": [
+                "switch_ports",
+                "Main Switch",
+                "-t",
+                "-p",
+                "5"
+            ]
         },
         {
             "name": "CLI: Get Gateway",
@@ -58,7 +79,10 @@
             "request": "launch",
             "module": "tplink_omada_client.cli",
             "justMyCode": true,
-            "args": ["gateway", "--dump"]
+            "args": [
+                "gateway",
+                "--dump"
+            ]
         },
         {
             "name": "CLI: Get Gateway Port Details",
@@ -66,7 +90,11 @@
             "request": "launch",
             "module": "tplink_omada_client.cli",
             "justMyCode": true,
-            "args": ["wan", "--port", "2"]
+            "args": [
+                "wan",
+                "--port",
+                "2"
+            ]
         },
         {
             "name": "CLI: Set Port Port PoE",
@@ -74,7 +102,14 @@
             "request": "launch",
             "module": "tplink_omada_client.cli",
             "justMyCode": true,
-            "args": ["poe", "Main Switch", "--port", "2", "--on", "-d"]
+            "args": [
+                "poe",
+                "Main Switch",
+                "--port",
+                "16",
+                "--on",
+                "-d"
+            ]
         },
         {
             "name": "CLI: Get Clients",
@@ -82,7 +117,9 @@
             "request": "launch",
             "module": "tplink_omada_client.cli",
             "justMyCode": true,
-            "args": ["clients"]
+            "args": [
+                "clients"
+            ]
         },
         {
             "name": "CLI: Get Client",
@@ -90,7 +127,11 @@
             "request": "launch",
             "module": "tplink_omada_client.cli",
             "justMyCode": true,
-            "args": ["client", "Nanoleaf", "--dump"]
+            "args": [
+                "client",
+                "Nanoleaf",
+                "--dump"
+            ]
         },
         {
             "name": "CLI: Upload certificate",
@@ -98,8 +139,10 @@
             "request": "launch",
             "module": "tplink_omada_client.cli",
             "justMyCode": true,
-            "args": ["upload-certificate", "/workspaces/tplink-omada-api/omada3.pfx"]
+            "args": [
+                "upload-certificate",
+                "/workspaces/tplink-omada-api/omada3.pfx"
+            ]
         }
-
     ]
 }

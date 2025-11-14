@@ -7,10 +7,7 @@
   "[python]": {
     "editor.defaultFormatter": "charliermarsh.ruff"
   },
-  "ruff.format.args": [
-    "--config",
-    "line-length=127"
-  ],
+  "ruff.lineLength": 127,
   "pylint.args": [
     "--max-line-length=127"
   ]

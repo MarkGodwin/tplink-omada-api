@@ -28,10 +28,11 @@ async def _set_switch_poe(
     site_client: OmadaSiteClient, device: OmadaDevice, port: int, change: bool, on: bool
 ) -> OmadaApiData:
     if change:
+        print(f"Updating switch {device.name} Port {port} PoE to {('on' if on else 'off')}")
         result = await site_client.update_switch_port(device, port, overrides=SwitchPortOverrides(enable_poe=on))
     else:
         result = await site_client.get_switch_port(device, port)
-    print(f"Switch {device.name} Port {port} PoE now is {result.poe_mode.name}")
+    print(f"Switch {device.name} Port {port} PoE is {result.poe_mode.name}")
     return result
 
 

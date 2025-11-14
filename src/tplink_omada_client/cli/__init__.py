@@ -30,6 +30,7 @@ from . import (
     command_targets,
     command_unblock_client,
     command_wan,
+    command_controller_info,
 )
 
 
@@ -67,6 +68,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     command_targets.arg_parser(subparsers)
     command_unblock_client.arg_parser(subparsers)
     command_wan.arg_parser(subparsers)
+    command_controller_info.arg_parser(subparsers)
 
     try:
         args = parser.parse_args(args=argv)
