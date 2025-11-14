@@ -46,32 +46,32 @@ class OmadaDevice(OmadaApiData):
     @property
     def name(self) -> str:
         """The device name."""
-        return self._data["name"]
+        return self._data.get("name", self.mac)
 
     @property
     def model(self) -> str:
         """The device model, such as EAP225."""
-        return self._data["model"]
+        return self._data("model", "Unknown")
 
     @property
     def model_display_name(self) -> str:
         """Model description for front-end display."""
-        return self._data["showModel"]
+        return self._data.get("showModel", "Unknown Model")
 
     @property
     def status(self) -> DeviceStatus:
         """The status of the device."""
-        return DeviceStatus(self._data["status"])
+        return DeviceStatus(self._data.get("status", DeviceStatus.UNKNOWN))
 
     @property
     def status_category(self) -> DeviceStatusCategory:
         """The high-level status of the device."""
-        return DeviceStatusCategory(self._data["statusCategory"])
+        return DeviceStatusCategory(self._data.get("statusCategory", DeviceStatusCategory.UNKNOWN))
 
     @property
     def ip_address(self) -> str:
         """IP address of the device."""
-        return self._data["ip"]
+        return self._data.get("ip", "")
 
     @property
     def display_uptime(self) -> str | None:
@@ -108,7 +108,10 @@ class OmadaDevice(OmadaApiData):
     @property
     def firmware_version(self) -> str:
         """Firmware version of the device"""
-        return self._data["firmwareVersion"]
+        if self._data["statusCategory"] == DeviceStatusCategory.CONNECTED:
+            return self._data["firmwareVersion"]
+        else:
+            return "Unknown"
 
 
 class OmadaListDevice(OmadaDevice):
@@ -137,7 +140,7 @@ class OmadaDetailedDevice(OmadaDevice):
     @property
     def led_setting(self) -> LedSetting:
         """The onboard LED setting for the device"""
-        return LedSetting(self._data["ledSetting"])
+        return LedSetting(self._data.get("ledSetting", LedSetting.UNKNOWN))
 
 
 class OmadaLink(OmadaApiData):
@@ -295,17 +298,17 @@ class OmadaSwitchDeviceCaps(OmadaApiData):
     @property
     def poe_ports(self) -> int:
         """Number of PoE ports supported."""
-        return self._data["poePortNum"]
+        return self._data.get("poePortNum", 0)
 
     @property
     def supports_poe(self) -> bool:
         """Is PoE supported."""
-        return self._data["poeSupport"]
+        return self._data.get("poeSupport", False)
 
     @property
     def supports_bt(self) -> bool:
         """Is BT supported."""
-        return self._data["supportBt"]
+        return self._data.get("supportBt", False)
 
 
 class OmadaSwitch(OmadaDetailedDevice):
@@ -317,12 +320,12 @@ class OmadaSwitch(OmadaDetailedDevice):
         if "portNum" in self._data:
             return self._data["portNum"]
         # So much for the docs
-        return self._data["deviceMisc"]["portNum"]
+        return self._data.get("deviceMisc", {}).get("portNum", 0)
 
     @property
     def ports(self) -> list[OmadaSwitchPort]:
         """List of ports attached to the switch."""
-        return [OmadaSwitchPort(p) for p in self._data["ports"]]
+        return [OmadaSwitchPort(p) for p in self._data.get("ports", [])]
 
     @property
     def uplink(self) -> OmadaUplink | None:
@@ -344,7 +347,7 @@ class OmadaSwitch(OmadaDetailedDevice):
     @property
     def device_capabilities(self) -> OmadaSwitchDeviceCaps:
         """Capabilities of the switch."""
-        return OmadaSwitchDeviceCaps(self._data["devCap"])
+        return OmadaSwitchDeviceCaps(self._data.get("devCap", {}))
 
 
 class OmadaAccesPointLanPortSettings(OmadaApiData):
@@ -353,12 +356,12 @@ class OmadaAccesPointLanPortSettings(OmadaApiData):
     @property
     def port_name(self) -> str:
         """Name of the port - can't be edited"""
-        return self._data["lanPort"]
+        return self._data.get("lanPort", "LAN Port")
 
     @property
     def supports_vlan(self) -> bool:
         """True if the port supports VLAN tagging"""
-        return self._data["supportVlan"]
+        return self._data.get("supportVlan", False)
 
     @property
     def local_vlan_enable(self) -> bool:
@@ -391,37 +394,47 @@ class OmadaAccessPoint(OmadaDetailedDevice):
     @property
     def wireless_linked(self) -> bool:
         """True, if the AP is connected wirelessley."""
-        return self._data["wirelessLinked"]
+        return self._data.get("wirelessLinked", False)
 
     @property
     def supports_5g(self) -> bool:
         """True if 5G wifi is supported"""
-        return self._data["deviceMisc"]["support5g"]
+        if "deviceMisc" not in self._data:
+            return False
+        return self._data["deviceMisc"].get("support5g", False)
 
     @property
     def supports_5g2(self) -> bool:
         """True if 5G2 wifi is supported"""
-        return self._data["deviceMisc"]["support5g2"]
+        if "deviceMisc" not in self._data:
+            return False
+        return self._data["deviceMisc"].get("support5g2", False)
 
     @property
     def supports_6g(self) -> bool:
         """True if Wifi 6 is supported"""
-        return self._data["deviceMisc"]["support6g"]
+        if "deviceMisc" not in self._data:
+            return False
+        return self._data["deviceMisc"].get("support6g", False)
 
     @property
     def supports_11ac(self) -> bool:
         """True if PoE is supported"""
-        return self._data["deviceMisc"]["support11ac"]
+        if "deviceMisc" not in self._data:
+            return False
+        return self._data["deviceMisc"].get("support11ac", False)
 
     @property
     def supports_mesh(self) -> bool:
         """True if mesh networking is supported"""
-        return self._data["deviceMisc"]["supportMesh"]
+        if "deviceMisc" not in self._data:
+            return False
+        return self._data["deviceMisc"].get("supportMesh", False)
 
     @property
     def lan_port_settings(self) -> list[OmadaAccesPointLanPortSettings]:
         """Settings for the LAN ports on the access point"""
-        return [OmadaAccesPointLanPortSettings(p) for p in self._data["lanPortSettings"]]
+        return [OmadaAccesPointLanPortSettings(p) for p in self._data.get("lanPortSettings", [])]
 
     @property
     def wired_uplink(self) -> OmadaUplink | None:
@@ -882,17 +895,17 @@ class OmadaGateway(OmadaDetailedDevice):
     @property
     def supports_poe(self) -> bool:
         """True if the device supports PoE."""
-        return self._data["supportPoe"]
+        return self._data.get("supportPoe", False)
 
     @property
     def ip(self) -> str:
         """Gateway's LAN IP address."""
-        return self._data["ip"]
+        return self._data.get("ip", "")
 
     @property
     def port_status(self) -> list[OmadaGatewayPortStatus]:
         """Status of the gateway's ports."""
-        return [OmadaGatewayPortStatus(p) for p in self._data["portStats"]]
+        return [OmadaGatewayPortStatus(p) for p in self._data.get("portStats", [])]
 
     @property
     def port_configs(self) -> list[OmadaGatewayPortConfig]:

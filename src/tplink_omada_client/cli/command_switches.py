@@ -1,6 +1,8 @@
 """Implementation for 'switches' command"""
 
 from argparse import _SubParsersAction
+
+from tplink_omada_client.definitions import DeviceStatusCategory
 from .config import get_target_config, to_omada_connection
 from .util import dump_raw_data, get_link_status_char, get_power_char, get_target_argument
 
@@ -14,6 +16,10 @@ async def command_switches(args) -> int:
         site_client = await client.get_site_client(config.site)
         for switch in await site_client.get_switches():
             print(f"{switch.mac} {switch.ip_address:>15}  {switch.name:20} ", end="")
+            if switch.status_category != DeviceStatusCategory.CONNECTED:
+                print(f" {switch.status.name} ({switch.status_category.name})")
+                continue
+
             for port in switch.ports:
                 if port.is_disabled:
                     print("x", end="")
