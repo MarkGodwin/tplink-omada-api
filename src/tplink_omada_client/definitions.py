@@ -168,6 +168,19 @@ class Eth802Dot1X(IntEnum):
         return Eth802Dot1X.UNKNOWN
 
 
+class NetworkTagsSetting(IntEnum):
+    """Network tags settings for ports."""
+
+    UNKNOWN = -1
+    ALLOW_ALL = 0
+    BLOCK_ALL = 1
+    CUSTOM = 2
+
+    @classmethod
+    def _missing_(cls, _):
+        return NetworkTagsSetting.UNKNOWN
+
+
 class BandwidthControl(IntEnum):
     """Modes of bandwidth control."""
 

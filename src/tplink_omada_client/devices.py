@@ -16,6 +16,7 @@ from .definitions import (
     LinkDuplex,
     LinkSpeed,
     LinkStatus,
+    NetworkTagsSetting,
     OmadaApiData,
     PoEMode,
     PortType,
@@ -534,14 +535,44 @@ class OmadaSwitchPortDetails(OmadaSwitchPort):
         return "loopbackDetectVlanBasedEnable" in self._data
 
     @property
+    def native_network_id(self) -> str | None:
+        """ID of the port's native network."""
+        return self._data.get("nativeNetworkId", None)
+
+    @property
+    def tag_ids(self) -> list[str]:
+        """IDs of the port's tagged networks."""
+        return self._data.get("tagIds", [])
+
+    @property
+    def network_tags_setting(self) -> NetworkTagsSetting:
+        """Network tags setting for the port."""
+        return self._data.get("networkTagsSetting", NetworkTagsSetting.UNKNOWN)
+
+    @property
+    def tagged_network_ids(self) -> list[str]:
+        """IDs of the port's tagged networks."""
+        return self._data.get("tagNetworkIds", [])
+
+    @property
+    def untagged_network_ids(self) -> list[str]:
+        """IDs of the port's untagged networks."""
+        return self._data.get("untagNetworkIds", [])
+
+    @property
     def voice_network_enabled(self) -> bool:
-        """Voice network enabled"""
+        """True if Voice Network is enabled for the port"""
         return self._data.get("voiceNetworkEnable", False)
 
     @property
     def has_voice_network(self) -> bool:
         """True if Voice Network settings are available for this port"""
         return "voiceNetworkEnable" in self._data
+
+    @property
+    def voice_network_id(self) -> str | None:
+        """ID of the port's voice network, if any."""
+        return self._data.get("voiceNetworkId", None)
 
     @property
     def flow_control_enabled(self) -> bool:

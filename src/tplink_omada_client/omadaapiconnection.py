@@ -137,6 +137,14 @@ class OmadaApiConnection:
 
         return urljoin(self._url, f"/{self._controller_id}/api/v2/{end_point}")
 
+    def format_openapi_url(self, end_point: str, site: str | None = None) -> str:
+        """Get a REST url for the controller action"""
+
+        if site:
+            end_point = f"/sites/{site}/{end_point}"
+
+        return urljoin(self._url, f"/openapi/v1/{self._controller_id}{end_point}")
+
     async def iterate_pages(self, url: str, params: dict[str, Any] | None = None) -> AsyncIterable[dict[str, Any]]:
         """Iterates all the entries of a paged endpoint"""
         request_params = {}
@@ -186,6 +194,9 @@ class OmadaApiConnection:
         headers = {}
         if self._csrf_token:
             headers["Csrf-Token"] = self._csrf_token
+            headers["Omada-Request-Source"] = "web-local"
+            headers["Referer"] = self._url + "/"
+            headers["Origin"] = self._url
 
         try:
             async with session.request(

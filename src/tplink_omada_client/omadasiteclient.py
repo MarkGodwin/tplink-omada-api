@@ -19,6 +19,7 @@ from .definitions import (
     Eth802Dot1X,
     LinkDuplex,
     LinkSpeed,
+    NetworkTagsSetting,
     PoEMode,
     LedSetting,
 )
@@ -43,7 +44,7 @@ from .omadaapiconnection import OmadaApiConnection
 
 
 @dataclass
-class SwitchPortOverrides:
+class PortProfileOverrides:
     """
     Overrides that can be applied to a switch port.
     Leaving these as None should leave the existing setting unchanged.
@@ -53,16 +54,43 @@ class SwitchPortOverrides:
 
     enable_poe: bool | None = None
     dot1x_mode: Eth802Dot1X | None = None
-    duplex: LinkDuplex | None = None
-    link_speed: LinkSpeed | None = None
     lldp_med_enable: bool | None = None
     loopback_detect: bool | None = None
     spanning_tree_enable: bool | None = None
     port_isolation: bool | None = None
     loopback_detect_vlan_based: bool | None = None
-    voice_network: bool | None = None
     flow_control: bool | None = None
     eee: bool | None = None
+
+
+@dataclass
+class SwitchPortSettings:
+    """
+    Settings that can be applied to a switch port
+
+    Specify the values you want to modify. The remaining values will be unaffected
+    """
+
+    name: str | None = None
+    # Port profile to apply
+    profile_id: str | None = None
+    native_network_id: str | None = None
+    duplex: LinkDuplex | None = None
+    link_speed: LinkSpeed | None = None
+    # Port labels
+    tag_ids: list[str] | None = None
+    network_tags_setting: NetworkTagsSetting | None = None
+    # Set if network_tags_setting is CUSTOM
+    tagged_network_ids: list[str] | None = None
+    untagged_network_ids: list[str] | None = None
+    # Voice network
+    voice_network: bool | None = None
+    # Set if voice_network is True
+    voice_network_id: str | None = None
+
+    profile_override_enabled: bool | None = None
+    # Set if profile_override_enabled is True to specify overrides, otherwise the profile's settings are used
+    profile_overrides: PortProfileOverrides | None = None
 
 
 @dataclass
@@ -305,25 +333,21 @@ class OmadaSiteClient:
 
         return OmadaSwitchPortDetails(result)
 
-    async def get_switch_port_settings(
+    async def get_switch_port_overrides(
         self,
         mac_or_device: str | OmadaDevice,
         index_or_port: int | OmadaSwitchPort,
-    ) -> SwitchPortOverrides:
+    ) -> PortProfileOverrides:
         """Return the current override settings for the port of a switch, or the current profile settings as default."""
 
         port = await self.get_switch_port(mac_or_device, index_or_port)
 
-        result = SwitchPortOverrides(link_speed=port.link_speed)
-        if port.has_voice_network:
-            result.voice_network = port.voice_network_enabled
+        result = PortProfileOverrides()
 
         # Return the current settings based on the overrides if they exist
         if port.has_profile_override:
             result.enable_poe = port.poe_mode == PoEMode.ENABLED
             result.dot1x_mode = port.eth_802_1x_control
-            result.duplex = port.duplex
-            result.link_speed = port.link_speed
             result.lldp_med_enable = port.lldp_med_enabled
             result.loopback_detect = port.loopback_detect_enabled
             result.spanning_tree_enable = port.spanning_tree_enabled
@@ -344,8 +368,6 @@ class OmadaSiteClient:
 
         result.enable_poe = poe_mode
         result.dot1x_mode = prof.eth_802_1x_control
-        result.duplex = port.duplex
-        result.link_speed = port.link_speed
         result.lldp_med_enable = prof.lldp_med_enabled
         result.loopback_detect = prof.loopback_detect_enabled
         result.spanning_tree_enable = prof.spanning_tree_enabled
@@ -398,9 +420,7 @@ class OmadaSiteClient:
         self,
         mac_or_device: str | OmadaDevice,
         index_or_port: int | OmadaSwitchPort,
-        new_name: str | None = None,
-        profile_id: str | None = None,
-        overrides: SwitchPortOverrides | None = None,
+        settings: SwitchPortSettings,
     ) -> OmadaSwitchPortDetails:
         """Applies an existing profile to a switch on the port"""
 
@@ -416,62 +436,105 @@ class OmadaSiteClient:
         else:
             port = await self.get_switch_port(mac_or_device, index_or_port)
 
+        override_setting = (
+            settings.profile_override_enabled if settings.profile_override_enabled is not None else port.has_profile_override
+        )
         payload = {
-            "name": new_name or port.name,
-            "profileId": profile_id or port.profile_id,
-            "profileOverrideEnable": overrides is not None,
+            "name": settings.name or port.name,
+            "profileId": settings.profile_id or port.profile_id,
+            "linkSpeed": settings.link_speed if settings.link_speed is not None else port.link_speed,
+            "duplex": settings.duplex if settings.duplex is not None else port.duplex,
+            "profileOverrideEnable": override_setting,
+            "tagIds": settings.tag_ids if settings.tag_ids is not None else port.tag_ids,
         }
-        if overrides:
-            existing_settings = await self.get_switch_port_settings(mac, port)
+
+        if settings.native_network_id or port.native_network_id:
+            payload["nativeNetworkId"] = settings.native_network_id or port.native_network_id
+
+        network_tags_setting = (
+            settings.network_tags_setting if settings.network_tags_setting is not None else port.network_tags_setting
+        )
+        if network_tags_setting != NetworkTagsSetting.UNKNOWN:
+            payload["networkTagsSetting"] = network_tags_setting
+            if network_tags_setting == NetworkTagsSetting.CUSTOM:
+                payload["tagNetworkIds"] = (
+                    settings.tagged_network_ids if settings.tagged_network_ids is not None else port.tagged_network_ids
+                )
+                payload["untagNetworkIds"] = (
+                    settings.untagged_network_ids if settings.untagged_network_ids is not None else port.untagged_network_ids
+                )
+
+        if port.has_voice_network:
+            voice_network_setting = (
+                settings.voice_network if settings.voice_network is not None else port.voice_network_enabled
+            )
+            payload["voiceNetworkEnable"] = voice_network_setting
+            if voice_network_setting:
+                payload["voiceNetworkId"] = (
+                    settings.voice_network_id if settings.voice_network_id is not None else port.voice_network_id
+                )
+
+        if override_setting:
+            existing_overrides = await self.get_switch_port_overrides(mac, port)
+            new_overrides = settings.profile_overrides or PortProfileOverrides()
 
             # Hacks
             payload["operation"] = "switching"
             payload["bandWidthCtrlType"] = BandwidthControl.OFF
 
-            enable_poe = overrides.enable_poe if overrides.enable_poe is not None else existing_settings.enable_poe
+            enable_poe = new_overrides.enable_poe if new_overrides.enable_poe is not None else existing_overrides.enable_poe
             payload["poe"] = PoEMode.ENABLED if enable_poe else PoEMode.DISABLED
-            payload["dot1x"] = overrides.dot1x_mode if overrides.dot1x_mode is not None else existing_settings.dot1x_mode
-            payload["duplex"] = overrides.duplex if overrides.duplex is not None else existing_settings.duplex
-            payload["linkSpeed"] = overrides.link_speed if overrides.link_speed is not None else existing_settings.link_speed
+            payload["dot1x"] = (
+                new_overrides.dot1x_mode if new_overrides.dot1x_mode is not None else existing_overrides.dot1x_mode
+            )
             payload["lldpMedEnable"] = (
-                overrides.lldp_med_enable if overrides.lldp_med_enable is not None else existing_settings.lldp_med_enable
+                new_overrides.lldp_med_enable
+                if new_overrides.lldp_med_enable is not None
+                else existing_overrides.lldp_med_enable
             )
             payload["loopbackDetectEnable"] = (
-                overrides.loopback_detect if overrides.loopback_detect is not None else existing_settings.loopback_detect
+                new_overrides.loopback_detect
+                if new_overrides.loopback_detect is not None
+                else existing_overrides.loopback_detect
             )
             payload["spanningTreeEnable"] = (
-                overrides.spanning_tree_enable
-                if overrides.spanning_tree_enable is not None
-                else existing_settings.spanning_tree_enable
+                new_overrides.spanning_tree_enable
+                if new_overrides.spanning_tree_enable is not None
+                else existing_overrides.spanning_tree_enable
             )
             payload["portIsolationEnable"] = (
-                overrides.port_isolation if overrides.port_isolation is not None else existing_settings.port_isolation
+                new_overrides.port_isolation if new_overrides.port_isolation is not None else existing_overrides.port_isolation
             )
             if (await self._api.get_controller_version()) < AwesomeVersion("6"):
                 # Possibly no longer valid
                 payload["topoNotifyEnable"] = False
             else:
                 # Settings that might be non-optional in 6.0+ versions
-                eee = overrides.eee if overrides.eee is not None else existing_settings.eee
+                eee = new_overrides.eee if new_overrides.eee is not None else existing_overrides.eee
                 if eee is not None:
                     payload["eeeEnable"] = eee
-                fce = overrides.flow_control if overrides.flow_control is not None else existing_settings.flow_control
+                fce = new_overrides.flow_control if new_overrides.flow_control is not None else existing_overrides.flow_control
                 if fce is not None:
                     payload["flowControlEnable"] = fce
-                vne = overrides.voice_network if overrides.voice_network is not None else existing_settings.voice_network
-                if vne is not None:
-                    payload["voiceNetworkEnable"] = vne
                 ldvbe = (
-                    overrides.loopback_detect_vlan_based
-                    if overrides.loopback_detect_vlan_based is not None
-                    else existing_settings.loopback_detect_vlan_based
+                    new_overrides.loopback_detect_vlan_based
+                    if new_overrides.loopback_detect_vlan_based is not None
+                    else existing_overrides.loopback_detect_vlan_based
                 )
                 if ldvbe is not None:
                     payload["loopbackDetectVlanBasedEnable"] = ldvbe
 
+                payload["dhcpL2RelaySettings"] = {"enable": False}
+
+        if (await self._api.get_controller_version()) < AwesomeVersion("6"):
+            request_url = self._api.format_url(f"switches/{mac}/ports/{port.port}", self._site_id)
+        else:
+            # New OpenAPI endpoint from 6.0+
+            request_url = self._api.format_openapi_url(f"switches/{mac}/ports/{port.port}", self._site_id)
+
         await self._api.request(
             "patch",
-            self._api.format_url(f"switches/{mac}/ports/{port.port}", self._site_id),
+            request_url,
             json=payload,
         )
 
