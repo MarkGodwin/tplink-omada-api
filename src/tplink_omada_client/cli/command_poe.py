@@ -7,7 +7,8 @@ from tplink_omada_client.omadasiteclient import (
     AccessPointPortSettings,
     GatewayPortSettings,
     OmadaSiteClient,
-    SwitchPortOverrides,
+    PortProfileOverrides,
+    SwitchPortSettings,
 )
 from .config import get_target_config, to_omada_connection
 from .util import dump_raw_data, get_device_by_mac_or_name, get_target_argument
@@ -28,10 +29,18 @@ async def _set_switch_poe(
     site_client: OmadaSiteClient, device: OmadaDevice, port: int, change: bool, on: bool
 ) -> OmadaApiData:
     if change:
-        result = await site_client.update_switch_port(device, port, overrides=SwitchPortOverrides(enable_poe=on))
+        print(f"Updating switch {device.name} Port {port} PoE to {('on' if on else 'off')}")
+        result = await site_client.update_switch_port(
+            device,
+            port,
+            settings=SwitchPortSettings(
+                profile_override_enabled=True,
+                profile_overrides=PortProfileOverrides(enable_poe=on),
+            ),
+        )
     else:
         result = await site_client.get_switch_port(device, port)
-    print(f"Switch {device.name} Port {port} PoE now is {result.poe_mode.name}")
+    print(f"Switch {device.name} Port {port} PoE is {result.poe_mode.name}")
     return result
 
 

@@ -4,6 +4,7 @@ import os
 from typing import NamedTuple
 from aiohttp import MultipartWriter
 from aiohttp.client import ClientSession
+from awesomeversion import AwesomeVersion
 from multidict import CIMultiDict
 
 from .omadasiteclient import OmadaSiteClient
@@ -60,6 +61,10 @@ class OmadaClient:
         However, you may want to attempt a login to check connectivity.
         """
         return await self._api.login()
+
+    async def get_controller_version(self) -> AwesomeVersion:
+        """Get the controller version as an AwesomeVersion object."""
+        return await self._api.get_controller_version()
 
     async def get_controller_name(self) -> str:
         """Get the display name of the Omada controller."""

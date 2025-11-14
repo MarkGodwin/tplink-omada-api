@@ -4,21 +4,21 @@ build-backend = "hatchling.build"
 
 [project]
 name = "tplink_omada_client"
-version = "1.4.4"
+version = "1.5.0"
 authors = [
   { name="Mark Godwin", email="10632972+MarkGodwin@users.noreply.github.com" },
 ]
 description = "Python wrapper for TP-Link Omada SDN Controller API (OC200/OC300/Software Controller)"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.13"
 classifiers = [
-  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.13",
   "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
 ]
 dependencies = [
-  "aiohttp >= 3.9.3, <4",
-  "awesomeversion >= 22.9.0"
+  "aiohttp >= 3.12.2, <4",
+  "awesomeversion >= 25.8.0"
 ]
 
 [project.scripts]
