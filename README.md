@@ -8,7 +8,8 @@ A basic Python client for calling the TP-Link Omada controller API.
 pip install tplink-omada-client
 ```
 
-Note: Version 1.4 and later requires Python 3.11.
+Note: Version 1.4 requires Python 3.11.
+Note: Version 1.5 and later requires Python 3.13.
 
 ## Supported features
 
@@ -70,8 +71,8 @@ The Omada platform is transitioning to a new OpenAPI API which this library will
 eventually. We will try to avoid breaking changes when this happens, but some will be unavoidable - particularly
 authentication.
 
-At the moment, the new API imposes severe daily call limits, even though it is a local device API.
-Hopefully this will change, because it is unusable as it stands.
+For now, we can use the OpenAPI endpoint with the old authentication style, just like the front-end UI does.
+Eventually, we need to switch over to OAuth, but probably once all of the APIs have been migrated.
 
 ## Contributing
 
