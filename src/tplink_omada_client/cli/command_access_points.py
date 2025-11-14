@@ -1,6 +1,8 @@
 """Implementation for 'access-points' command"""
 
 from argparse import _SubParsersAction
+
+from tplink_omada_client.definitions import DeviceStatusCategory
 from .config import get_target_config, to_omada_connection
 from .util import dump_raw_data, get_checkbox_char, get_target_argument
 
@@ -14,6 +16,9 @@ async def command_access_points(args) -> int:
         site_client = await client.get_site_client(config.site)
         for access_point in await site_client.get_access_points():
             print(f"{access_point.mac} {access_point.ip_address:>15}  {access_point.name:20} ", end="")
+            if access_point.status_category != DeviceStatusCategory.CONNECTED:
+                print(f" {access_point.status.name} ({access_point.status_category.name})")
+                continue
             print(f"11ac: {get_checkbox_char(access_point.supports_11ac)}  ", end="")
             print(f"5g: {get_checkbox_char(access_point.supports_5g)}  ", end="")
             print(f"5g2: {get_checkbox_char(access_point.supports_5g2)}  ", end="")
