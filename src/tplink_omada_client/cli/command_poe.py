@@ -3,7 +3,7 @@
 from argparse import ArgumentError, ArgumentParser
 from tplink_omada_client.definitions import OmadaApiData, PoEMode
 from tplink_omada_client.devices import OmadaDevice
-from tplink_omada_client.omadasiteclient import (
+from tplink_omada_client import (
     AccessPointPortSettings,
     GatewayPortSettings,
     OmadaSiteClient,
