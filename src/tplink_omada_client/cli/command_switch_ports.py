@@ -40,7 +40,7 @@ async def command_switch_ports(args) -> int:
                 print(f"    Profile:     {p.profile_name} - {get_checkbox_char(p.has_profile_override)}")
                 print(f"    Enabled:     {get_checkbox_char(not p.is_disabled)}")
                 print(f"    Status:      {get_link_status_char(p.port_status.link_status)} ")
-                if switch.device_capabilities.supports_poe and p.type != PortType.SFP:
+                if switch.device_capabilities.supports_poe and p.supports_poe and p.type != PortType.SFP:
                     print(f"    PoE:         {get_checkbox_char(p.poe_mode == PoEMode.ENABLED)} ", end="")
                     print(f"{get_power_char(p.port_status.poe_active)} {p.port_status.poe_power}W ")
                 else:
@@ -66,7 +66,7 @@ def _print_port_table(switch: OmadaSwitch, ports: list[OmadaSwitchPortDetails]):
         else:
             print("       --- ", end="")
 
-        if switch.device_capabilities.supports_poe and p.type != PortType.SFP:
+        if switch.device_capabilities.supports_poe and p.supports_poe and p.type != PortType.SFP:
             print(f" {get_checkbox_char(p.poe_mode == PoEMode.ENABLED)}", end="")
             print(f"{get_power_char(p.port_status.poe_active)} {p.port_status.poe_power:>4}W ", end="")
         else:

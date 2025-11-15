@@ -385,7 +385,7 @@ class OmadaAccesPointLanPortSettings(OmadaApiData):
 
         WARNING: Do not enable PoE for EAPs powered from another EAP
         """
-        return self._data["poeOutEnable"]
+        return self._data.get("poeOutEnable", False)
 
 
 class OmadaAccessPoint(OmadaDetailedDevice):
@@ -479,9 +479,15 @@ class OmadaSwitchPortDetails(OmadaSwitchPort):
         return self._data["profileOverrideEnable"]
 
     @property
+    def supports_poe(self) -> bool:
+        """True if the port supports PoE."""
+        return self._data.get("supportPoe", True)  # default to true, some older versions don't report this
+
+    @property
     def poe_mode(self) -> PoEMode:
         """PoE config for this port."""
-        return PoEMode(self._data.get("poe", PoEMode.NONE))
+        # For reasons, Omada may claim Enabled on non-poe ports - probably due to port profiles
+        return PoEMode(self._data.get("poe", PoEMode.NONE)) if self.supports_poe else PoEMode.NONE
 
     @property
     def bandwidth_limit_mode(self) -> BandwidthControl:
