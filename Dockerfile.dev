@@ -1,10 +1,11 @@
-FROM mcr.microsoft.com/devcontainers/python:1-3.13
+FROM ghcr.io/astral-sh/uv:0.9.30 AS uv
 
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+FROM mcr.microsoft.com/devcontainers/python:3-3.13
+
+COPY --from=uv --chown=vscode: /uv /uvx /bin/
 
 RUN \
-    curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
-    && apt-get update \
+    apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         # Additional library needed by some tests and accordingly by VScode Tests Discovery
         git \
@@ -13,13 +14,3 @@ RUN \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /workspaces
-
-# Install Python dependencies from requirements
-COPY requirements.txt ./
-COPY requirements_test.txt ./
-RUN pip3 install -r requirements.txt
-RUN pip3 install -r requirements_test.txt
-RUN rm -f requirements.txt requirements_test.txt
-
-# Set the default shell to bash instead of sh
-ENV SHELL /bin/bash
