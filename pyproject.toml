@@ -35,7 +35,6 @@ dev = [
   "uv>=0.9.30",
 ]
 lint = [
-  "flake8>=7.3.0",
   "pylint>=4.0.4",
   "ruff>=0.15.0",
 ]
@@ -47,6 +46,18 @@ test = [
 
 [tool.ruff]
 line-length = 127
+preview = true
+
+[tool.ruff.lint]
+extend-select = [
+  "C90", # mccabe
+  "E",   # pycodestyle
+  "W",   # pycodestyle
+  "F",   # pyflakes
+]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
 
 [tool.pylint.main]
 max-line-length = 127
