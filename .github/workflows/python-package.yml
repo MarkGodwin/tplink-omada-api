@@ -7,10 +7,54 @@ on:
   push:
     branches: [ "master" ]
   pull_request:
-    branches: [ "master" ]
 
 jobs:
   build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.13"]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install uv and set the Python version
+      uses: astral-sh/setup-uv@v7
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Build package
+      run: uv build
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.13"]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install uv and set the Python version
+      uses: astral-sh/setup-uv@v7
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: uv sync --locked --all-extras --dev
+
+    - name: Lint with ruff
+      # stop the build if there are Python syntax errors or undefined names
+      run: uv run ruff check --select=E9,F63,F7,F82 --output-format=github
+
+    - name: Test with pytest
+      run: |
+        uv run pytest
+
+  lint:
+    continue-on-error: true
 
     runs-on: ubuntu-latest
     strategy:
@@ -30,14 +74,4 @@ jobs:
       run: uv sync --locked --all-extras --dev
 
     - name: Lint with ruff
-      run: |
-        # stop the build if there are Python syntax errors or undefined names
-        uv run ruff check --select=E9,F63,F7,F82 --output-format=github
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        uv run ruff check --exit-zero --output-format=github
-
-    - name: Test with pytest
-      run: |
-        uv run pytest
-    - name: Build package
-      run: uv build
+      run: uv run ruff check --output-format=github
