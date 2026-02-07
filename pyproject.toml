@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "tplink_omada_client"
-version = "1.5.3"
+version = "1.5.4"
 authors = [
   { name="Mark Godwin", email="10632972+MarkGodwin@users.noreply.github.com" },
 ]
@@ -45,7 +45,7 @@ test = [
 ]
 
 [tool.ruff]
-line-length = 127
+line-length = 140
 preview = true
 
 [tool.ruff.lint]
@@ -60,4 +60,4 @@ extend-select = [
 max-complexity = 10
 
 [tool.pylint.main]
-max-line-length = 127
+max-line-length = 140

@@ -218,9 +218,7 @@ class OmadaSiteClient:
 
     async def get_connected_clients(self) -> AsyncIterable[OmadaConnectedClient]:
         """Get the clients connected to the site network."""
-        async for client in self._api.iterate_pages(
-            self._api.format_url("clients", self._site_id), {"filters.active": "false"}
-        ):
+        async for client in self._api.iterate_pages(self._api.format_url("clients", self._site_id), {"filters.active": "false"}):
             is_wireless = client.get("wireless")
             if is_wireless:
                 yield OmadaWirelessClient(client)
@@ -416,6 +414,101 @@ class OmadaSiteClient:
         # The caller probably only cares about the updated port status
         return next(p for p in updated_ap.lan_port_settings if p.port_name == port_name)
 
+    def _build_base_port_payload(
+        self,
+        settings: SwitchPortSettings,
+        port: OmadaSwitchPortDetails,
+    ) -> dict:
+        """Build the base payload for switch port update."""
+        payload = {
+            "name": settings.name or port.name,
+            "profileId": settings.profile_id or port.profile_id,
+            "linkSpeed": settings.link_speed if settings.link_speed is not None else port.link_speed,
+            "duplex": settings.duplex if settings.duplex is not None else port.duplex,
+            "profileOverrideEnable": False,
+            "tagIds": settings.tag_ids if settings.tag_ids is not None else port.tag_ids,
+        }
+
+        if settings.native_network_id or port.native_network_id:
+            payload["nativeNetworkId"] = settings.native_network_id or port.native_network_id
+
+        # Add network tags settings to the payload.
+        network_tags_setting = settings.network_tags_setting if settings.network_tags_setting is not None else port.network_tags_setting
+        if network_tags_setting != NetworkTagsSetting.UNKNOWN:
+            payload["networkTagsSetting"] = network_tags_setting
+            if network_tags_setting == NetworkTagsSetting.CUSTOM:
+                payload["tagNetworkIds"] = (
+                    settings.tagged_network_ids if settings.tagged_network_ids is not None else port.tagged_network_ids
+                )
+                payload["untagNetworkIds"] = (
+                    settings.untagged_network_ids if settings.untagged_network_ids is not None else port.untagged_network_ids
+                )
+
+        # Add voice network settings to the payload.
+        if port.has_voice_network:
+            voice_network_setting = settings.voice_network if settings.voice_network is not None else port.voice_network_enabled
+            payload["voiceNetworkEnable"] = voice_network_setting
+            if voice_network_setting:
+                payload["voiceNetworkId"] = settings.voice_network_id if settings.voice_network_id is not None else port.voice_network_id
+
+        return payload
+
+    async def _add_override_settings_to_payload(
+        self,
+        payload: dict,
+        settings: SwitchPortSettings,
+        mac: str,
+        port: OmadaSwitchPortDetails,
+    ) -> None:
+        """Add profile override settings to the payload."""
+        existing_overrides = await self.get_switch_port_overrides(mac, port)
+        new_overrides = settings.profile_overrides or PortProfileOverrides()
+
+        payload["profileOverrideEnable"] = True
+
+        # Hacks
+        payload["operation"] = "switching"
+        payload["bandWidthCtrlType"] = BandwidthControl.OFF
+
+        enable_poe = new_overrides.enable_poe if new_overrides.enable_poe is not None else existing_overrides.enable_poe
+        payload["poe"] = PoEMode.ENABLED if enable_poe else PoEMode.DISABLED
+        payload["dot1x"] = new_overrides.dot1x_mode if new_overrides.dot1x_mode is not None else existing_overrides.dot1x_mode
+        payload["lldpMedEnable"] = (
+            new_overrides.lldp_med_enable if new_overrides.lldp_med_enable is not None else existing_overrides.lldp_med_enable
+        )
+        payload["loopbackDetectEnable"] = (
+            new_overrides.loopback_detect if new_overrides.loopback_detect is not None else existing_overrides.loopback_detect
+        )
+        payload["spanningTreeEnable"] = (
+            new_overrides.spanning_tree_enable
+            if new_overrides.spanning_tree_enable is not None
+            else existing_overrides.spanning_tree_enable
+        )
+        payload["portIsolationEnable"] = (
+            new_overrides.port_isolation if new_overrides.port_isolation is not None else existing_overrides.port_isolation
+        )
+
+        if (await self._api.get_controller_version()) < AwesomeVersion("6"):
+            # Possibly no longer valid
+            payload["topoNotifyEnable"] = False
+        else:
+            # Settings that might be non-optional in 6.0+ versions
+            eee = new_overrides.eee if new_overrides.eee is not None else existing_overrides.eee
+            if eee is not None:
+                payload["eeeEnable"] = eee
+            fce = new_overrides.flow_control if new_overrides.flow_control is not None else existing_overrides.flow_control
+            if fce is not None:
+                payload["flowControlEnable"] = fce
+            ldvbe = (
+                new_overrides.loopback_detect_vlan_based
+                if new_overrides.loopback_detect_vlan_based is not None
+                else existing_overrides.loopback_detect_vlan_based
+            )
+            if ldvbe is not None:
+                payload["loopbackDetectVlanBasedEnable"] = ldvbe
+
+            payload["dhcpL2RelaySettings"] = {"enable": False}
+
     async def update_switch_port(
         self,
         mac_or_device: str | OmadaDevice,
@@ -436,100 +529,15 @@ class OmadaSiteClient:
         else:
             port = await self.get_switch_port(mac_or_device, index_or_port)
 
-        override_setting = (
-            settings.profile_override_enabled if settings.profile_override_enabled is not None else port.has_profile_override
-        )
-        payload = {
-            "name": settings.name or port.name,
-            "profileId": settings.profile_id or port.profile_id,
-            "linkSpeed": settings.link_speed if settings.link_speed is not None else port.link_speed,
-            "duplex": settings.duplex if settings.duplex is not None else port.duplex,
-            "profileOverrideEnable": override_setting,
-            "tagIds": settings.tag_ids if settings.tag_ids is not None else port.tag_ids,
-        }
+        override_setting = settings.profile_override_enabled if settings.profile_override_enabled is not None else port.has_profile_override
 
-        if settings.native_network_id or port.native_network_id:
-            payload["nativeNetworkId"] = settings.native_network_id or port.native_network_id
-
-        network_tags_setting = (
-            settings.network_tags_setting if settings.network_tags_setting is not None else port.network_tags_setting
-        )
-        if network_tags_setting != NetworkTagsSetting.UNKNOWN:
-            payload["networkTagsSetting"] = network_tags_setting
-            if network_tags_setting == NetworkTagsSetting.CUSTOM:
-                payload["tagNetworkIds"] = (
-                    settings.tagged_network_ids if settings.tagged_network_ids is not None else port.tagged_network_ids
-                )
-                payload["untagNetworkIds"] = (
-                    settings.untagged_network_ids if settings.untagged_network_ids is not None else port.untagged_network_ids
-                )
-
-        if port.has_voice_network:
-            voice_network_setting = (
-                settings.voice_network if settings.voice_network is not None else port.voice_network_enabled
-            )
-            payload["voiceNetworkEnable"] = voice_network_setting
-            if voice_network_setting:
-                payload["voiceNetworkId"] = (
-                    settings.voice_network_id if settings.voice_network_id is not None else port.voice_network_id
-                )
-
+        payload = self._build_base_port_payload(settings, port)
         if override_setting:
-            existing_overrides = await self.get_switch_port_overrides(mac, port)
-            new_overrides = settings.profile_overrides or PortProfileOverrides()
-
-            # Hacks
-            payload["operation"] = "switching"
-            payload["bandWidthCtrlType"] = BandwidthControl.OFF
-
-            enable_poe = new_overrides.enable_poe if new_overrides.enable_poe is not None else existing_overrides.enable_poe
-            payload["poe"] = PoEMode.ENABLED if enable_poe else PoEMode.DISABLED
-            payload["dot1x"] = (
-                new_overrides.dot1x_mode if new_overrides.dot1x_mode is not None else existing_overrides.dot1x_mode
-            )
-            payload["lldpMedEnable"] = (
-                new_overrides.lldp_med_enable
-                if new_overrides.lldp_med_enable is not None
-                else existing_overrides.lldp_med_enable
-            )
-            payload["loopbackDetectEnable"] = (
-                new_overrides.loopback_detect
-                if new_overrides.loopback_detect is not None
-                else existing_overrides.loopback_detect
-            )
-            payload["spanningTreeEnable"] = (
-                new_overrides.spanning_tree_enable
-                if new_overrides.spanning_tree_enable is not None
-                else existing_overrides.spanning_tree_enable
-            )
-            payload["portIsolationEnable"] = (
-                new_overrides.port_isolation if new_overrides.port_isolation is not None else existing_overrides.port_isolation
-            )
-            if (await self._api.get_controller_version()) < AwesomeVersion("6"):
-                # Possibly no longer valid
-                payload["topoNotifyEnable"] = False
-            else:
-                # Settings that might be non-optional in 6.0+ versions
-                eee = new_overrides.eee if new_overrides.eee is not None else existing_overrides.eee
-                if eee is not None:
-                    payload["eeeEnable"] = eee
-                fce = new_overrides.flow_control if new_overrides.flow_control is not None else existing_overrides.flow_control
-                if fce is not None:
-                    payload["flowControlEnable"] = fce
-                ldvbe = (
-                    new_overrides.loopback_detect_vlan_based
-                    if new_overrides.loopback_detect_vlan_based is not None
-                    else existing_overrides.loopback_detect_vlan_based
-                )
-                if ldvbe is not None:
-                    payload["loopbackDetectVlanBasedEnable"] = ldvbe
-
-                payload["dhcpL2RelaySettings"] = {"enable": False}
+            await self._add_override_settings_to_payload(payload, settings, mac, port)
 
         if (await self._api.get_controller_version()) < AwesomeVersion("6"):
             request_url = self._api.format_url(f"switches/{mac}/ports/{port.port}", self._site_id)
         else:
-            # New OpenAPI endpoint from 6.0+
             request_url = self._api.format_openapi_url(f"switches/{mac}/ports/{port.port}", self._site_id)
 
         await self._api.request(
@@ -538,7 +546,6 @@ class OmadaSiteClient:
             json=payload,
         )
 
-        # Read back the new port settings
         return await self.get_switch_port(mac, port)
 
     async def get_port_profile(self, profile_id: str) -> OmadaPortProfile:
