@@ -1,9 +1,0 @@
-# linters such as flake8 and pylint should be pinned, as new releases
-# make new things fail. Manually update these pins when pulling in a
-# new version
-
-# types-* that have versions roughly corresponding to the packages they
-# contain hints for available should be kept in sync with them
-
-coverage==7.4.4
-pytest-aiohttp==1.0.5
