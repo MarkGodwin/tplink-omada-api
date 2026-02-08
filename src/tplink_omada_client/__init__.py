@@ -11,6 +11,12 @@ from .omadasiteclient import (
     PortProfileOverrides,
     SwitchPortSettings,
 )
+from .definitions import (
+    OmadaControllerUpdateInfo,
+    OmadaHardwareUpgradeStatus,
+    OmadaHardwareUpdateInfo,
+)
+
 from . import definitions
 from . import exceptions
 from . import clients
@@ -19,6 +25,9 @@ __all__ = [
     "OmadaClient",
     "OmadaSite",
     "OmadaSiteClient",
+    "OmadaControllerUpdateInfo",
+    "OmadaHardwareUpgradeStatus",
+    "OmadaHardwareUpdateInfo",
     "AccessPointPortSettings",
     "GatewayPortSettings",
     "OmadaClientSettings",
