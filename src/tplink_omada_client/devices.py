@@ -51,7 +51,7 @@ class OmadaDevice(OmadaApiData):
     @property
     def model(self) -> str:
         """The device model, such as EAP225."""
-        return self._data("model", "Unknown")
+        return self._data.get("model", "Unknown")
 
     @property
     def model_display_name(self) -> str:
@@ -723,12 +723,12 @@ class OmadaFirmwareUpdate(OmadaApiData):
     @property
     def latest_version(self) -> str:
         """Latest firmware version available."""
-        return self._data["lastFwVer"]
+        return self._data.get("lastFwVer", self.current_version)
 
     @property
     def release_notes(self) -> str:
         """Release notes for the new firmware."""
-        return self._data["fwReleaseLog"]
+        return self._data.get("fwReleaseLog", "")
 
 
 class OmadaGatewayPortStatus(OmadaApiData, OmadaPortStatus):

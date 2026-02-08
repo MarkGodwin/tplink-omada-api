@@ -16,6 +16,7 @@ from . import (
     command_clients,
     command_default,
     command_devices,
+    command_firmware,
     command_gateway,
     command_known_clients,
     command_poe,
@@ -53,6 +54,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     command_clients.arg_parser(subparsers)
     command_default.arg_parser(subparsers)
     command_devices.arg_parser(subparsers)
+    command_firmware.arg_parser(subparsers)
     command_gateway.arg_parser(subparsers)
     command_known_clients.arg_parser(subparsers)
     command_poe.arg_parser(subparsers)

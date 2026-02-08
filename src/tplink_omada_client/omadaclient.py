@@ -7,6 +7,7 @@ from aiohttp.client import ClientSession
 from awesomeversion import AwesomeVersion
 from multidict import CIMultiDict
 
+from .definitions import OmadaControllerUpdateInfo, OmadaHardwareUpgradeStatus
 from .omadasiteclient import OmadaSiteClient
 from .omadaapiconnection import OmadaApiConnection
 
@@ -141,3 +142,25 @@ class OmadaClient:
         }
         url = self._api.format_url("controller/setting")
         await self._api.request("patch", url, json=payload)
+
+    async def check_firmware_updates(self) -> OmadaControllerUpdateInfo:
+        """Check if firmware updates are available for the Omada hardware controller
+
+        Software Controller updates are probably not available via this API
+        """
+        result = await self._api.request("get", self._api.format_url("controller/notification/updateInfo"))
+
+        return OmadaControllerUpdateInfo(result)
+
+    async def upgrade_controller_firmware(self, target_version: str) -> bool:
+        """Upgrade the Omada hardware controller firmware to the specified version."""
+        url = self._api.format_url("cmd/upgradeFirmware")
+        payload = {"targetVersion": target_version}
+        await self._api.request("post", url, json=payload)
+        return True
+
+    async def get_controller_upgrade_status(self) -> OmadaHardwareUpgradeStatus:
+        """Get the status of an ongoing hardware controller firmware upgrade."""
+        url = self._api.format_url("maintenance/hardware/upgradeStatus")
+        result = await self._api.request("get", url)
+        return OmadaHardwareUpgradeStatus(result)

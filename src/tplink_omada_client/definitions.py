@@ -277,3 +277,65 @@ class LedSetting(IntEnum):
     @classmethod
     def _missing_(cls, _):
         return LedSetting.UNKNOWN
+
+
+class OmadaHardwareUpdateInfo(OmadaApiData):
+    """Information about available hardware firmware updates."""
+
+    @property
+    def upgrade(self) -> bool:
+        """Whether a firmware upgrade is available."""
+        return self._data["upgrade"]
+
+    @property
+    def latest_version(self) -> str:
+        """The latest available firmware version."""
+        return self._data.get("latestVersion", self.current_version)
+
+    @property
+    def current_version(self) -> str:
+        """The currently installed firmware version."""
+        return self._data["currentVersion"]
+
+    @property
+    def release_notes(self) -> str | None:
+        """Release notes for the latest firmware version."""
+        return self._data.get("fwReleaseLog", None)
+
+
+class OmadaControllerUpdateInfo(OmadaApiData):
+    """Information about available controller and device firmware updates."""
+
+    @property
+    def hardware(self) -> OmadaHardwareUpdateInfo | None:
+        """Information about available hardware controller firmware updates."""
+        return OmadaHardwareUpdateInfo(self._data["hardware"]) if "hardware" in self._data else None
+
+
+class OmadaHardwareUpgradeStatus(OmadaApiData):
+    """Information about the status of a hardware controller firmware upgrade."""
+
+    @property
+    def upgrade_status(self) -> int:
+        """The current status of the firmware upgrade process."""
+        return self._data["upgradeStatus"]
+
+    @property
+    def upgrade_msg(self) -> str:
+        """Any message associated with the current firmware upgrade status."""
+        return self._data.get("upgradeMsg", "")
+
+    @property
+    def upgrade_time(self) -> int:
+        """How often to refresh to watch the download progress?"""
+        return self._data.get("upgradeTime", 0)
+
+    @property
+    def download_progress(self) -> int:
+        """The current progress of the firmware download, as a percentage."""
+        return self._data.get("downloadProgress", 0)
+
+    @property
+    def reboot_time(self) -> int:
+        """How long after the download completes before we expect the controller to come back online, in seconds."""
+        return self._data.get("rebootTime", 300)
