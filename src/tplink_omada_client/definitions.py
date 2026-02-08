@@ -337,5 +337,5 @@ class OmadaHardwareUpgradeStatus(OmadaApiData):
 
     @property
     def reboot_time(self) -> int:
-        """How long after the donwload completes before we expect the controller to come back online, in seconds."""
+        """How long after the download completes before we expect the controller to come back online, in seconds."""
         return self._data.get("rebootTime", 300)

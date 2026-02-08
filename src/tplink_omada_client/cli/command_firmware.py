@@ -25,9 +25,6 @@ async def command_firmware(args) -> int:
 
         site_client = await client.get_site_client(config.site)
         devices = await site_client.get_devices()
-        if not devices:
-            print("No devices found in the specified site.")
-            return 0
 
         for device in devices:
             firmware = await site_client.get_firmware_details(device)
@@ -44,7 +41,7 @@ async def command_firmware(args) -> int:
 def arg_parser(subparsers) -> None:
     """Configures arguments parser for 'firmware' command"""
     firmware_parser: ArgumentParser = subparsers.add_parser(
-        "firmware", help="Shows firmware information and update availability for the specified device"
+        "firmware", help="Shows firmware information and update availability for all devices"
     )
     firmware_parser.set_defaults(func=command_firmware)
 

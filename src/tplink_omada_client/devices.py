@@ -728,7 +728,7 @@ class OmadaFirmwareUpdate(OmadaApiData):
     @property
     def release_notes(self) -> str:
         """Release notes for the new firmware."""
-        return self._data["fwReleaseLog"]
+        return self._data.get("fwReleaseLog", "")
 
 
 class OmadaGatewayPortStatus(OmadaApiData, OmadaPortStatus):
