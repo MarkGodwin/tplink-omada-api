@@ -218,12 +218,25 @@ class OmadaSiteClient:
 
     async def get_connected_clients(self) -> AsyncIterable[OmadaConnectedClient]:
         """Get the clients connected to the site network."""
-        async for client in self._api.iterate_pages(self._api.format_url("clients", self._site_id), {"filters.active": "false"}):
-            is_wireless = client.get("wireless")
-            if is_wireless:
-                yield OmadaWirelessClient(client)
-            elif is_wireless is False:
-                yield OmadaWiredClient(client)
+        if (await self._api.get_controller_version()) >= AwesomeVersion("6.2.0.0"):
+            request_url = self._api.format_openapi_url("clients", version="v2", site=self._site_id)
+            async for client in self._api.iterate_pages_openapi(
+                request_url,
+                body={"filters": {"active": True}, "sorts": {}, "hideHealthUnsupported": True, "scope": 1},
+            ):
+                is_wireless = client.get("wireless")
+                if is_wireless:
+                    yield OmadaWirelessClient(client)
+                elif is_wireless is False:
+                    yield OmadaWiredClient(client)
+        else:
+            request_url = self._api.format_url("clients", self._site_id)
+            async for client in self._api.iterate_pages(request_url, {"filters.active": "false"}):
+                is_wireless = client.get("wireless")
+                if is_wireless:
+                    yield OmadaWirelessClient(client)
+                elif is_wireless is False:
+                    yield OmadaWiredClient(client)
 
     async def get_known_clients(self) -> AsyncIterable[OmadaNetworkClient]:
         """Get the clients connected to the site network."""

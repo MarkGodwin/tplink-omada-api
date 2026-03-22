@@ -213,7 +213,7 @@ class OmadaWiredClient(OmadaConnectedClient):
     @property
     def dot1x_vlan(self) -> int:
         """Network name corresponding to the VLAN obtained by 802.1x D-VLAN"""
-        return self._data["dot1xVlan"]
+        return self._data.get("dot1xVlan", 0)
 
     @property
     def gateway_mac(self) -> str | None:
@@ -233,7 +233,7 @@ class OmadaWiredClient(OmadaConnectedClient):
     @property
     def port(self) -> int:
         """Switch port client is connected to"""
-        return self._data["port"]
+        return self._data.get("port", -1)
 
     @property
     def switch_mac(self) -> str | None:
