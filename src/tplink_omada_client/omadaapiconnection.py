@@ -137,16 +137,16 @@ class OmadaApiConnection:
 
         return urljoin(self._url, f"/{self._controller_id}/api/v2/{end_point}")
 
-    def format_openapi_url(self, end_point: str, site: str | None = None) -> str:
+    def format_openapi_url(self, end_point: str, version: str = "v1", site: str | None = None) -> str:
         """Get a REST url for the controller action"""
 
         if site:
             end_point = f"/sites/{site}/{end_point}"
 
-        return urljoin(self._url, f"/openapi/v1/{self._controller_id}{end_point}")
+        return urljoin(self._url, f"/openapi/{version}/{self._controller_id}{end_point}")
 
     async def iterate_pages(self, url: str, params: dict[str, Any] | None = None) -> AsyncIterable[dict[str, Any]]:
-        """Iterates all the entries of a paged endpoint"""
+        """Iterates all the entries of a paged endpoint using GET with query parameters (old API)"""
         request_params = {}
         if params is not None:
             request_params.update(params)
@@ -158,6 +158,30 @@ class OmadaApiConnection:
             request_params["currentPageSize"] = actual_page_size
             request_params["currentPage"] = current_page
             response = await self.request("get", url, request_params)
+
+            # Setup next page request
+            actual_page_size = int(response["currentSize"])
+            total_rows = int(response["totalRows"])
+            has_next = total_rows > current_page * actual_page_size
+            current_page += 1
+
+            data: list[dict[str, Any]] = response["data"]
+            for item in data:
+                yield item
+
+    async def iterate_pages_openapi(self, url: str, body: dict[str, Any] | None = None) -> AsyncIterable[dict[str, Any]]:
+        """Iterates all the entries of a paged endpoint using POST with JSON body (OpenAPI v2)"""
+        request_body = {}
+        if body is not None:
+            request_body.update(body)
+        actual_page_size = _PAGE_SIZE
+
+        current_page = 1
+        has_next = True
+        while has_next:
+            request_body["pageSize"] = actual_page_size
+            request_body["page"] = current_page
+            response = await self.request("post", url, json=request_body)
 
             # Setup next page request
             actual_page_size = int(response["currentSize"])
