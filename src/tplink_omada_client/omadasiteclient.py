@@ -551,7 +551,7 @@ class OmadaSiteClient:
         if (await self._api.get_controller_version()) < AwesomeVersion("6"):
             request_url = self._api.format_url(f"switches/{mac}/ports/{port.port}", self._site_id)
         else:
-            request_url = self._api.format_openapi_url(f"switches/{mac}/ports/{port.port}", self._site_id)
+            request_url = self._api.format_openapi_url(f"switches/{mac}/ports/{port.port}", site=self._site_id)
 
         await self._api.request(
             "patch",

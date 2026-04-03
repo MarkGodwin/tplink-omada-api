@@ -141,9 +141,9 @@ class OmadaApiConnection:
         """Get a REST url for the controller action"""
 
         if site:
-            end_point = f"/sites/{site}/{end_point}"
+            end_point = f"sites/{site}/{end_point}"
 
-        return urljoin(self._url, f"/openapi/{version}/{self._controller_id}{end_point}")
+        return urljoin(self._url, f"/openapi/{version}/{self._controller_id}/{end_point}")
 
     async def iterate_pages(self, url: str, params: dict[str, Any] | None = None) -> AsyncIterable[dict[str, Any]]:
         """Iterates all the entries of a paged endpoint using GET with query parameters (old API)"""
