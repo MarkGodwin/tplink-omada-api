@@ -26,6 +26,60 @@ class OmadaApiData(ABC):
         return self._data
 
 
+class OmadaControllerInfo(OmadaApiData):
+    """Information returned by the Omada Controller /api/info endpoint."""
+
+    @property
+    def controller_version(self) -> str:
+        """Controller software version."""
+        return self._data["controllerVer"]
+
+    @property
+    def api_version(self) -> str | None:
+        """Controller API version."""
+        return self._data.get("apiVer")
+
+    @property
+    def configured(self) -> bool | None:
+        """Whether the controller setup wizard has been completed."""
+        return self._data.get("configured")
+
+    @property
+    def type(self) -> int | None:
+        """Controller type as returned by the Omada API."""
+        return self._data.get("type")
+
+    @property
+    def support_app(self) -> bool | None:
+        """Whether the controller supports the Omada app."""
+        return self._data.get("supportApp")
+
+    @property
+    def omadac_id(self) -> str:
+        """Controller ID."""
+        return self._data["omadacId"]
+
+    @property
+    def registered_root(self) -> bool | None:
+        """Whether the root account is registered."""
+        return self._data.get("registeredRoot")
+
+    @property
+    def omadac_category(self) -> str | None:
+        """Controller category."""
+        return self._data.get("omadacCategory")
+
+    @property
+    def msp_mode(self) -> bool | None:
+        """Whether the controller is running in MSP mode."""
+        return self._data.get("mspMode")
+
+    @property
+    def omada_cloud_url(self) -> str | None:
+        """Omada cloud URL."""
+        return self._data.get("omadaCloudUrl")
+
+
 class DeviceStatus(IntEnum):
     """Known status codes for devices."""
 

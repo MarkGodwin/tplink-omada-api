@@ -7,7 +7,7 @@ from aiohttp.client import ClientSession
 from awesomeversion import AwesomeVersion
 from multidict import CIMultiDict
 
-from .definitions import OmadaControllerUpdateInfo, OmadaHardwareUpgradeStatus
+from .definitions import OmadaControllerInfo, OmadaControllerUpdateInfo, OmadaHardwareUpgradeStatus
 from .omadasiteclient import OmadaSiteClient
 from .omadaapiconnection import OmadaApiConnection
 
@@ -66,6 +66,10 @@ class OmadaClient:
     async def get_controller_version(self) -> AwesomeVersion:
         """Get the controller version as an AwesomeVersion object."""
         return await self._api.get_controller_version()
+
+    async def get_controller_info(self) -> OmadaControllerInfo:
+        """Get diagnostic information from the Omada Controller /api/info endpoint."""
+        return await self._api.get_controller_info()
 
     async def get_controller_name(self) -> str:
         """Get the display name of the Omada controller."""
