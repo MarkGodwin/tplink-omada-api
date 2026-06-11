@@ -8,15 +8,19 @@ from .definitions import OmadaApiData
 # OpenAPI list endpoints per VPN tab (relative to .../sites/{site}/vpn/).
 # All three confirmed from captures on controller 6.2.10.18.
 VPN_LIST_ENDPOINTS: dict[str, str] = {
-    "server": "client-to-site-vpn-servers",  # confirmed
-    "client": "client-to-site-vpn-clients",  # confirmed
-    "site_to_site": "site-to-site-vpns",     # confirmed
+    "server": "client-to-site-vpn-servers",
+    "client": "client-to-site-vpn-clients",
+    "site_to_site": "site-to-site-vpns",
 }
 
-# vpnType values seen so far: 2 = IPsec, 3 = OpenVPN.
 VPN_TYPE_NAMES: dict[int, str] = {
+    0: "L2TP",
+    1: "PPTP",
     2: "IPsec",
     3: "OpenVPN",
+    4: "Wireguard",
+    5: "SSL"
+
 }
 
 
