@@ -9,7 +9,7 @@ from .definitions import OmadaApiData
 # All three confirmed from captures on controller 6.2.10.18.
 VPN_LIST_ENDPOINTS: dict[str, str] = {
     "server": "client-to-site-vpn-servers",  # confirmed
-    "client": "client-to-site-vpn-clients",  # confirmed (e.g. "NetflixVPN")
+    "client": "client-to-site-vpn-clients",  # confirmed
     "site_to_site": "site-to-site-vpns",     # confirmed
 }
 
