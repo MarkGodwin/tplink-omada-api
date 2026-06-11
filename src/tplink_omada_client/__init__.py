@@ -16,6 +16,7 @@ from .definitions import (
     OmadaHardwareUpgradeStatus,
     OmadaHardwareUpdateInfo,
 )
+from .vpn import OmadaVpnCategory, OmadaVpnPolicy
 
 from . import definitions
 from . import exceptions
@@ -35,6 +36,8 @@ __all__ = [
     "PortProfileOverrides",
     "SwitchPortSettings",
     "OmadaSwitchPortDetails",
+    "OmadaVpnCategory",
+    "OmadaVpnPolicy",
     "definitions",
     "exceptions",
     "clients",

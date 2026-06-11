@@ -39,8 +39,10 @@ from .devices import (
 )
 from .exceptions import (
     InvalidDevice,
+    OmadaClientException,
 )
 from .omadaapiconnection import OmadaApiConnection
+from .vpn import VPN_LIST_ENDPOINTS, OmadaVpnCategory, OmadaVpnPolicy
 
 
 @dataclass
@@ -736,3 +738,30 @@ class OmadaSiteClient:
         )
 
         return True
+
+    async def get_vpn_policies(self) -> list[OmadaVpnPolicy]:
+        """Get all VPN policies (server / client / site-to-site) for the site."""
+        policies: list[OmadaVpnPolicy] = []
+        for category in OmadaVpnCategory:
+            slug = VPN_LIST_ENDPOINTS.get(category.value, "")
+            if not slug:
+                continue
+            url = self._api.format_openapi_url(
+                f"vpn/{slug}", version="v2", site=self._site_id
+            )
+            try:
+                result = await self._api.request(
+                    "get", url, params={"page": 1, "pageSize": 100}
+                )
+            except OmadaClientException:
+                continue
+            for item in result.get("data", []):
+                policies.append(OmadaVpnPolicy(category, item))
+        return policies
+
+    async def set_vpn_policy_enabled(self, policy_id: str, enabled: bool) -> None:
+        """Enable or disable a VPN policy by id. Works for every VPN type."""
+        url = self._api.format_openapi_url(
+            f"vpn/{policy_id}/status", version="v1", site=self._site_id
+        )
+        await self._api.request("patch", url, json={"status": enabled})
