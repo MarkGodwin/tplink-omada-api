@@ -487,7 +487,9 @@ class OmadaSiteClient:
 
         enable_poe = new_overrides.enable_poe if new_overrides.enable_poe is not None else existing_overrides.enable_poe
         payload["poe"] = PoEMode.ENABLED if enable_poe else PoEMode.DISABLED
-        payload["dot1x"] = new_overrides.dot1x_mode if new_overrides.dot1x_mode is not None else existing_overrides.dot1x_mode
+        dot1x = new_overrides.dot1x_mode if new_overrides.dot1x_mode is not None else existing_overrides.dot1x_mode
+        if dot1x is not None and dot1x != Eth802Dot1X.UNKNOWN:
+            payload["dot1x"] = dot1x
         payload["lldpMedEnable"] = (
             new_overrides.lldp_med_enable if new_overrides.lldp_med_enable is not None else existing_overrides.lldp_med_enable
         )
@@ -575,6 +577,10 @@ class OmadaSiteClient:
 
     async def get_port_profiles(self) -> list[OmadaPortProfile]:
         """Lists the available switch port profiles that can be applied."""
+
+        if (await self._api.get_controller_version()) >= AwesomeVersion("6.2.0.0"):
+            request_url = self._api.format_openapi_url("lan-profiles", version="v2", site=self._site_id)
+            return [OmadaPortProfile(p) async for p in self._api.iterate_pages_openapi_get(request_url)]
 
         result = await self._api.request("get", self._api.format_url("setting/lan/profileSummary", self._site_id))
 
@@ -744,13 +750,9 @@ class OmadaSiteClient:
         policies: list[OmadaVpnPolicy] = []
         for category in OmadaVpnCategory:
             slug = _VPN_LIST_ENDPOINTS[category]
-            url = self._api.format_openapi_url(
-                f"vpn/{slug}", version="v2", site=self._site_id
-            )
+            url = self._api.format_openapi_url(f"vpn/{slug}", version="v2", site=self._site_id)
             try:
-                result = await self._api.request(
-                    "get", url, params={"page": 1, "pageSize": 100}
-                )
+                result = await self._api.request("get", url, params={"page": 1, "pageSize": 100})
             except OmadaClientException:
                 continue
             for item in result.get("data", []):
@@ -759,7 +761,5 @@ class OmadaSiteClient:
 
     async def set_vpn_policy_enabled(self, policy_id: str, enabled: bool) -> None:
         """Enable or disable a VPN policy by id. Works for every VPN type."""
-        url = self._api.format_openapi_url(
-            f"vpn/{policy_id}/status", version="v1", site=self._site_id
-        )
+        url = self._api.format_openapi_url(f"vpn/{policy_id}/status", version="v1", site=self._site_id)
         await self._api.request("patch", url, json={"status": enabled})

@@ -516,7 +516,7 @@ class OmadaSwitchPortDetails(OmadaSwitchPort):
     @property
     def eth_802_1x_control(self) -> Eth802Dot1X:
         """802.1x Auth mode"""
-        return Eth802Dot1X(self._data["dot1x"])
+        return Eth802Dot1X(self._data.get("dot1x", Eth802Dot1X.UNKNOWN))
 
     @property
     def lldp_med_enabled(self) -> bool:
@@ -625,7 +625,7 @@ class OmadaPortProfile(OmadaApiData):
     @property
     def site(self) -> str:
         """Site which this profile is valid for."""
-        return self._data["site"]
+        return self._data.get("site", "")
 
     @property
     def name(self) -> str:
@@ -645,7 +645,7 @@ class OmadaPortProfile(OmadaApiData):
     @property
     def eth_802_1x_control(self) -> Eth802Dot1X:
         """802.1x Auth mode"""
-        return Eth802Dot1X(self._data["dot1x"])
+        return Eth802Dot1X(self._data.get("dot1x", Eth802Dot1X.UNKNOWN))
 
     @property
     def lldp_med_enabled(self) -> bool:

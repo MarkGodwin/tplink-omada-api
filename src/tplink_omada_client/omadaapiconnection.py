@@ -198,6 +198,30 @@ class OmadaApiConnection:
             for item in data:
                 yield item
 
+    async def iterate_pages_openapi_get(self, url: str, params: dict[str, Any] | None = None) -> AsyncIterable[dict[str, Any]]:
+        """Iterates all the entries of a paged endpoint using GET with query parameters (OpenAPI v2)"""
+        request_params = {}
+        if params is not None:
+            request_params.update(params)
+        actual_page_size = _PAGE_SIZE
+
+        current_page = 1
+        has_next = True
+        while has_next:
+            request_params["pageSize"] = actual_page_size
+            request_params["page"] = current_page
+            response = await self.request("get", url, params=request_params)
+
+            # Setup next page request
+            actual_page_size = int(response["currentSize"])
+            total_rows = int(response["totalRows"])
+            has_next = total_rows > current_page * actual_page_size
+            current_page += 1
+
+            data: list[dict[str, Any]] = response["data"]
+            for item in data:
+                yield item
+
     async def request(self, method: str, url: str, params=None, json=None, data: Payload | None = None) -> Any:
         """Perform a request specific to the controlller, with authentication"""
 
