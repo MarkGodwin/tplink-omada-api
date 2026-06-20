@@ -134,7 +134,6 @@ class OmadaApiConnection:
 
         return (info.controller_version, info.omadac_id)
 
-
     def format_url(self, end_point: str, site: str | None = None) -> str:
         """Get a REST url for the controller action"""
 
