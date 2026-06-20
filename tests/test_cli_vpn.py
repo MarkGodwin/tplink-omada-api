@@ -5,7 +5,7 @@ import asyncio
 
 import pytest
 
-import tplink_omada_client.cli as cli
+from tplink_omada_client import cli
 from tplink_omada_client.cli import command_vpn
 from tplink_omada_client.cli.config import ControllerConfig
 from tplink_omada_client.vpn import OmadaVpnCategory, OmadaVpnPolicy, OmadaVpnType

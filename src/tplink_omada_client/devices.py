@@ -6,6 +6,7 @@ APs, Switches and Routers
 
 from abc import ABC, abstractmethod
 from typing import Any
+
 from .definitions import (
     BandwidthControl,
     DeviceStatus,
@@ -13,6 +14,7 @@ from .definitions import (
     Eth802Dot1X,
     GatewayPortMode,
     GatewayPortType,
+    LedSetting,
     LinkDuplex,
     LinkSpeed,
     LinkStatus,
@@ -20,7 +22,6 @@ from .definitions import (
     OmadaApiData,
     PoEMode,
     PortType,
-    LedSetting,
 )
 
 

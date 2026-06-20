@@ -3,7 +3,7 @@
 import argparse
 import asyncio
 import sys
-from typing import Sequence
+from collections.abc import Sequence
 
 from tplink_omada_client.exceptions import LoginFailed
 
@@ -14,6 +14,7 @@ from . import (
     command_certificate,
     command_client,
     command_clients,
+    command_controller_info,
     command_default,
     command_devices,
     command_firmware,
@@ -33,7 +34,6 @@ from . import (
     command_unblock_client,
     command_vpn,
     command_wan,
-    command_controller_info,
 )
 
 

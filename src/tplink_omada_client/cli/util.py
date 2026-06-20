@@ -2,12 +2,12 @@
 
 import argparse
 import json
-
-from typing import Any
 from re import IGNORECASE, match
-from tplink_omada_client.devices import OmadaApiData, OmadaDevice
-from tplink_omada_client.definitions import LinkStatus
+from typing import Any
+
 from tplink_omada_client import OmadaSiteClient
+from tplink_omada_client.definitions import LinkStatus
+from tplink_omada_client.devices import OmadaApiData, OmadaDevice
 
 TARGET_ARG: str = "target"
 

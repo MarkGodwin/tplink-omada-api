@@ -1,6 +1,6 @@
 """Client for Omada Site requests."""
 
-from typing import AsyncIterable
+from collections.abc import AsyncIterable
 from dataclasses import dataclass
 
 from awesomeversion import AwesomeVersion
@@ -17,13 +17,14 @@ from .clients import (
 from .definitions import (
     BandwidthControl,
     Eth802Dot1X,
+    LedSetting,
     LinkDuplex,
     LinkSpeed,
     NetworkTagsSetting,
     PoEMode,
-    LedSetting,
 )
 from .devices import (
+    OmadaAccesPointLanPortSettings,
     OmadaAccessPoint,
     OmadaDevice,
     OmadaFirmwareUpdate,
@@ -35,7 +36,6 @@ from .devices import (
     OmadaSwitch,
     OmadaSwitchPort,
     OmadaSwitchPortDetails,
-    OmadaAccesPointLanPortSettings,
 )
 from .exceptions import (
     InvalidDevice,

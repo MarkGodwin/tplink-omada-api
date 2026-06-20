@@ -1,11 +1,12 @@
 """Internal Omada API client."""
 
-import time
-from typing import Any, AsyncIterable
-
 import re
-from urllib.parse import urlsplit, urljoin
-from aiohttp import Payload, client_exceptions, CookieJar
+import time
+from collections.abc import AsyncIterable
+from typing import Any
+from urllib.parse import urljoin, urlsplit
+
+from aiohttp import CookieJar, Payload, client_exceptions
 from aiohttp.client import ClientSession
 from awesomeversion import AwesomeVersion
 
@@ -18,7 +19,6 @@ from .exceptions import (
     RequestFailed,
     UnsupportedControllerVersion,
 )
-
 
 _PAGE_SIZE: int = 100
 
@@ -64,10 +64,10 @@ class OmadaApiConnection:
         try:
             await self.login()
             return self
-        except Exception as error:
+        except Exception:
             if self._own_session:
                 await self.close()
-            raise error
+            raise
 
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> bool:
         """Call when the client is disposed."""

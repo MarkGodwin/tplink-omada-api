@@ -1,8 +1,7 @@
 """Implementation for 'poe' command"""
 
 from argparse import ArgumentError, ArgumentParser
-from tplink_omada_client.definitions import OmadaApiData, PoEMode
-from tplink_omada_client.devices import OmadaDevice
+
 from tplink_omada_client import (
     AccessPointPortSettings,
     GatewayPortSettings,
@@ -10,6 +9,9 @@ from tplink_omada_client import (
     PortProfileOverrides,
     SwitchPortSettings,
 )
+from tplink_omada_client.definitions import OmadaApiData, PoEMode
+from tplink_omada_client.devices import OmadaDevice
+
 from .config import get_target_config, to_omada_connection
 from .util import dump_raw_data, get_device_by_mac_or_name, get_target_argument
 
