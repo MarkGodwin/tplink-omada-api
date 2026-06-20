@@ -42,7 +42,7 @@ from .exceptions import (
     OmadaClientException,
 )
 from .omadaapiconnection import OmadaApiConnection
-from .vpn import VPN_LIST_ENDPOINTS, OmadaVpnCategory, OmadaVpnPolicy
+from .vpn import _VPN_LIST_ENDPOINTS, OmadaVpnCategory, OmadaVpnPolicy
 
 
 @dataclass
@@ -743,9 +743,7 @@ class OmadaSiteClient:
         """Get all VPN policies (server / client / site-to-site) for the site."""
         policies: list[OmadaVpnPolicy] = []
         for category in OmadaVpnCategory:
-            slug = VPN_LIST_ENDPOINTS.get(category.value, "")
-            if not slug:
-                continue
+            slug = _VPN_LIST_ENDPOINTS[category]
             url = self._api.format_openapi_url(
                 f"vpn/{slug}", version="v2", site=self._site_id
             )

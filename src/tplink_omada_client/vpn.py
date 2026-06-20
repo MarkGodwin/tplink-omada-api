@@ -1,27 +1,9 @@
 """VPN policy models for the Omada SDN controller (OpenAPI)."""
 
-from enum import StrEnum
+from enum import IntEnum, StrEnum
 from typing import Any
 
 from .definitions import OmadaApiData
-
-# OpenAPI list endpoints per VPN tab (relative to .../sites/{site}/vpn/).
-# All three confirmed from captures on controller 6.2.10.18.
-VPN_LIST_ENDPOINTS: dict[str, str] = {
-    "server": "client-to-site-vpn-servers",
-    "client": "client-to-site-vpn-clients",
-    "site_to_site": "site-to-site-vpns",
-}
-
-VPN_TYPE_NAMES: dict[int, str] = {
-    0: "L2TP",
-    1: "PPTP",
-    2: "IPsec",
-    3: "OpenVPN",
-    4: "Wireguard",
-    5: "SSL"
-
-}
 
 
 class OmadaVpnCategory(StrEnum):
@@ -30,6 +12,31 @@ class OmadaVpnCategory(StrEnum):
     SERVER = "server"
     CLIENT = "client"
     SITE_TO_SITE = "site_to_site"
+
+
+# OpenAPI list endpoints per VPN tab (relative to .../sites/{site}/vpn/).
+# All three confirmed from captures on controller 6.2.10.18.
+_VPN_LIST_ENDPOINTS: dict[OmadaVpnCategory, str] = {
+    OmadaVpnCategory.SERVER: "client-to-site-vpn-servers",
+    OmadaVpnCategory.CLIENT: "client-to-site-vpn-clients",
+    OmadaVpnCategory.SITE_TO_SITE: "site-to-site-vpns",
+}
+
+
+class OmadaVpnType(IntEnum):
+    """Known VPN protocol types."""
+
+    UNKNOWN = -1
+    L2TP = 0
+    PPTP = 1
+    IPSEC = 2
+    OPENVPN = 3
+    WIREGUARD = 4
+    SSL = 5
+
+    @classmethod
+    def _missing_(cls, _):
+        return OmadaVpnType.UNKNOWN
 
 
 class OmadaVpnPolicy(OmadaApiData):
@@ -60,14 +67,21 @@ class OmadaVpnPolicy(OmadaApiData):
         return bool(self._data.get("status", False))
 
     @property
-    def vpn_type(self) -> int:
-        """Raw vpnType code (2 = IPsec, 3 = OpenVPN)."""
-        return int(self._data.get("vpnType", -1))
+    def vpn_type(self) -> OmadaVpnType:
+        """VPN protocol type."""
+        try:
+            return OmadaVpnType(int(self._data.get("vpnType", -1)))
+        except (TypeError, ValueError):
+            return OmadaVpnType.UNKNOWN
 
     @property
     def vpn_type_name(self) -> str:
         """Human-readable protocol, falling back to the raw code."""
-        return VPN_TYPE_NAMES.get(self.vpn_type, f"VPN ({self.vpn_type})")
+        return {
+            OmadaVpnType.IPSEC: "IPsec",
+            OmadaVpnType.OPENVPN: "OpenVPN",
+            OmadaVpnType.WIREGUARD: "WireGuard",
+        }.get(self.vpn_type, self.vpn_type.name)
 
     @property
     def unique_id(self) -> str:

@@ -30,6 +30,7 @@ from . import (
     command_target,
     command_targets,
     command_unblock_client,
+    command_vpn,
     command_wan,
     command_controller_info,
 )
@@ -69,6 +70,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     command_target.arg_parser(subparsers)
     command_targets.arg_parser(subparsers)
     command_unblock_client.arg_parser(subparsers)
+    command_vpn.arg_parser(subparsers)
     command_wan.arg_parser(subparsers)
     command_controller_info.arg_parser(subparsers)
 
