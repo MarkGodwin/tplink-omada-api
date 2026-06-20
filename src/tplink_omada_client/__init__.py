@@ -12,6 +12,7 @@ from .omadasiteclient import (
     SwitchPortSettings,
 )
 from .definitions import (
+    OmadaControllerInfo,
     OmadaControllerUpdateInfo,
     OmadaHardwareUpgradeStatus,
     OmadaHardwareUpdateInfo,
@@ -25,6 +26,7 @@ __all__ = [
     "OmadaClient",
     "OmadaSite",
     "OmadaSiteClient",
+    "OmadaControllerInfo",
     "OmadaControllerUpdateInfo",
     "OmadaHardwareUpgradeStatus",
     "OmadaHardwareUpdateInfo",

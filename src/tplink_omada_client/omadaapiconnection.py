@@ -9,6 +9,7 @@ from aiohttp import Payload, client_exceptions, CookieJar
 from aiohttp.client import ClientSession
 from awesomeversion import AwesomeVersion
 
+from .definitions import OmadaControllerInfo
 from .exceptions import (
     BadControllerUrl,
     ConnectionFailed,
@@ -122,12 +123,16 @@ class OmadaApiConnection:
         except:  # pylint: disable=bare-except  # noqa: E722
             return False
 
+    async def get_controller_info(self) -> OmadaControllerInfo:
+        """Get Omada controller diagnostic information unauthenticated."""
+        response = await self._do_request("get", urljoin(self._url, "/api/info"))
+        return OmadaControllerInfo(response)
+
     async def _get_controller_info(self) -> tuple[str, str]:
         """Get Omada controller version and Id (unauthenticated)."""
+        info = await self.get_controller_info()
 
-        response = await self._do_request("get", urljoin(self._url, "/api/info"))
-
-        return (response["controllerVer"], response["omadacId"])
+        return (info.controller_version, info.omadac_id)
 
     def format_url(self, end_point: str, site: str | None = None) -> str:
         """Get a REST url for the controller action"""
