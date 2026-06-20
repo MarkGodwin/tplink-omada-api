@@ -2,8 +2,8 @@
 
 from argparse import _SubParsersAction
 
+from .config import get_target_config, set_default_target
 from .util import assert_target_argument
-from .config import set_default_target, get_target_config
 
 
 async def command_target(args) -> int:

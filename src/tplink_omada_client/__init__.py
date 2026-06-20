@@ -1,47 +1,44 @@
 """TP-Link Omada API Client"""
 
+from . import clients, definitions, exceptions
+from .definitions import (
+    OmadaControllerInfo,
+    OmadaControllerUpdateInfo,
+    OmadaHardwareUpdateInfo,
+    OmadaHardwareUpgradeStatus,
+)
 from .devices import OmadaSwitchPortDetails
 from .omadaclient import OmadaClient, OmadaSite
 from .omadasiteclient import (
     AccessPointPortSettings,
     GatewayPortSettings,
-    OmadaClientSettings,
     OmadaClientFixedAddress,
+    OmadaClientSettings,
     OmadaSiteClient,
     PortProfileOverrides,
     SwitchPortSettings,
 )
-from .definitions import (
-    OmadaControllerInfo,
-    OmadaControllerUpdateInfo,
-    OmadaHardwareUpgradeStatus,
-    OmadaHardwareUpdateInfo,
-)
 from .vpn import OmadaVpnCategory, OmadaVpnPolicy, OmadaVpnType
 
-from . import definitions
-from . import exceptions
-from . import clients
-
 __all__ = [
-    "OmadaClient",
-    "OmadaSite",
-    "OmadaSiteClient",
-    "OmadaControllerInfo",
-    "OmadaControllerUpdateInfo",
-    "OmadaHardwareUpgradeStatus",
-    "OmadaHardwareUpdateInfo",
     "AccessPointPortSettings",
     "GatewayPortSettings",
-    "OmadaClientSettings",
+    "OmadaClient",
     "OmadaClientFixedAddress",
-    "PortProfileOverrides",
-    "SwitchPortSettings",
+    "OmadaClientSettings",
+    "OmadaControllerInfo",
+    "OmadaControllerUpdateInfo",
+    "OmadaHardwareUpdateInfo",
+    "OmadaHardwareUpgradeStatus",
+    "OmadaSite",
+    "OmadaSiteClient",
     "OmadaSwitchPortDetails",
     "OmadaVpnCategory",
     "OmadaVpnPolicy",
     "OmadaVpnType",
+    "PortProfileOverrides",
+    "SwitchPortSettings",
+    "clients",
     "definitions",
     "exceptions",
-    "clients",
 ]

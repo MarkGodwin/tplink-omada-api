@@ -5,30 +5,28 @@ import asyncio
 
 import pytest
 
-import tplink_omada_client.cli as cli
+from tplink_omada_client import cli
 from tplink_omada_client.cli import command_port_profiles
 from tplink_omada_client.cli.config import ControllerConfig
 from tplink_omada_client.devices import OmadaPortProfile
 
 
 def _profile(profile_id: str, name: str, dot1x: int = 2) -> OmadaPortProfile:
-    return OmadaPortProfile(
-        {
-            "id": profile_id,
-            "name": name,
-            "type": 2,
-            "poe": 2,
-            "dot1x": dot1x,
-            "portIsolationEnable": False,
-            "lldpMedEnable": True,
-            "bandWidthCtrlType": 0,
-            "spanningTreeEnable": False,
-            "loopbackDetectEnable": True,
-            "eeeEnable": False,
-            "flowControlEnable": False,
-            "loopbackDetectVlanBasedEnable": False,
-        }
-    )
+    return OmadaPortProfile({
+        "id": profile_id,
+        "name": name,
+        "type": 2,
+        "poe": 2,
+        "dot1x": dot1x,
+        "portIsolationEnable": False,
+        "lldpMedEnable": True,
+        "bandWidthCtrlType": 0,
+        "spanningTreeEnable": False,
+        "loopbackDetectEnable": True,
+        "eeeEnable": False,
+        "flowControlEnable": False,
+        "loopbackDetectVlanBasedEnable": False,
+    })
 
 
 class FakeSiteClient:
@@ -75,7 +73,7 @@ def test_main_registers_port_profiles_command(monkeypatch):
 
     monkeypatch.setattr(cli.command_port_profiles, "command_port_profiles", fake_command)
 
-    assert cli.main(["port_profiles"]) == 0
+    assert cli.main(["port-profiles"]) == 0
     assert seen["profile"] is None
 
 

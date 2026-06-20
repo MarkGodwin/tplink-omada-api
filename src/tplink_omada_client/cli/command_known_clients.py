@@ -1,7 +1,8 @@
 """Implementation for 'known-clients' command"""
 
 from argparse import _SubParsersAction
-from datetime import datetime
+from datetime import UTC, datetime
+
 from .config import get_target_config, to_omada_connection
 from .util import dump_raw_data, get_target_argument
 
@@ -22,7 +23,7 @@ async def command_known_clients(args) -> int:
                 blocked = "blocked"
             else:
                 blocked = ""
-            lastseen = str(datetime.utcfromtimestamp(client.last_seen))
+            lastseen = str(datetime.fromtimestamp(client.last_seen, tz=UTC))
             print(f"{client.mac}{name:<25}{blocked:<8} {lastseen}")
             dump_raw_data(args, client)
 

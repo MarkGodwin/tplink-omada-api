@@ -1,4 +1,4 @@
-"""Implementation for 'controller_info' command"""
+"""Implementation for 'controller-info' command"""
 
 from argparse import ArgumentParser
 from typing import Any
@@ -15,7 +15,7 @@ def _format_value(value: Any) -> str:
 
 
 async def command_controller_info(args) -> int:
-    """Executes 'controller_info' command"""
+    """Executes 'controller-info' command"""
     controller = get_target_argument(args)
     config = get_target_config(controller)
 
@@ -42,6 +42,6 @@ async def command_controller_info(args) -> int:
 
 def arg_parser(subparsers) -> None:
     """Configures arguments parser for 'gateway' command"""
-    parser: ArgumentParser = subparsers.add_parser("controller_info", help="Gets basic information about the Omada Controller")
+    parser: ArgumentParser = subparsers.add_parser("controller-info", help="Gets basic information about the Omada Controller")
     parser.set_defaults(func=command_controller_info)
     parser.add_argument("-d", "--dump", help="Output raw controller information", action="store_true")

@@ -3,6 +3,7 @@
 from argparse import _SubParsersAction
 
 from tplink_omada_client.definitions import DeviceStatusCategory
+
 from .config import get_target_config, to_omada_connection
 from .util import dump_raw_data, get_link_status_char, get_power_char, get_target_argument
 

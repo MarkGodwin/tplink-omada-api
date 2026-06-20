@@ -1,8 +1,10 @@
 """Implementation for 'set-client-name' command"""
 
 from argparse import _SubParsersAction
-from tplink_omada_client.cli.command_client import print_client
+
 from tplink_omada_client import OmadaClientSettings
+from tplink_omada_client.cli.command_client import print_client
+
 from .config import get_target_config, to_omada_connection
 from .util import dump_raw_data, get_client_mac, get_target_argument
 

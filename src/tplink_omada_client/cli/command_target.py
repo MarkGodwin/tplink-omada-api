@@ -1,10 +1,12 @@
 """Implementation of 'target' command"""
 
-from argparse import _SubParsersAction, ArgumentError
 import getpass
+from argparse import ArgumentError, _SubParsersAction
+
 from tplink_omada_client.exceptions import OmadaClientException
-from .util import get_target_argument, assert_target_argument
+
 from .config import ControllerConfig, delete_target_config, get_target_config, set_target_config, to_omada_connection
+from .util import assert_target_argument, get_target_argument
 
 
 def _update_existing_config(config: ControllerConfig, args: dict) -> None:

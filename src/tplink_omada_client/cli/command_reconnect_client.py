@@ -1,6 +1,7 @@
 """Implementation for 'client' command"""
 
 from argparse import _SubParsersAction
+
 from .config import get_target_config, to_omada_connection
 from .util import get_client_mac, get_target_argument
 

@@ -1,9 +1,11 @@
 """Implementation for 'client' command"""
 
-from argparse import _SubParsersAction, ArgumentError
 import datetime
-from tplink_omada_client.clients import OmadaConnectedClient, OmadaWiredClientDetails, OmadaWirelessClientDetails
+from argparse import ArgumentError, _SubParsersAction
+
 from tplink_omada_client import OmadaClientFixedAddress, OmadaClientSettings
+from tplink_omada_client.clients import OmadaConnectedClient, OmadaWiredClientDetails, OmadaWirelessClientDetails
+
 from .config import get_target_config, to_omada_connection
 from .util import dump_raw_data, get_client_mac, get_target_argument
 

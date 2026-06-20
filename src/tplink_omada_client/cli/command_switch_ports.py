@@ -1,15 +1,17 @@
 """Implementation for 'switch_ports' command"""
 
 from argparse import ArgumentParser
+
 from tplink_omada_client.definitions import PoEMode, PortType
 from tplink_omada_client.devices import OmadaSwitch, OmadaSwitchPortDetails
+
 from .config import get_target_config, to_omada_connection
 from .util import (
     dump_raw_data,
     get_checkbox_char,
+    get_device_mac,
     get_display_bytes,
     get_link_status_char,
-    get_device_mac,
     get_power_char,
     get_target_argument,
 )
@@ -28,7 +30,7 @@ async def command_switch_ports(args) -> int:
 
         filter_port = args["port"]
         if filter_port:
-            ports = list((p for p in ports if p.port == int(filter_port)))
+            ports = [p for p in ports if p.port == int(filter_port)]
 
         if args["table"]:
             _print_port_table(switch, ports)

@@ -1,23 +1,23 @@
 """Simple Http client for Omada controller REST api."""
 
+import asyncio
 import os
 from typing import NamedTuple
+
 from aiohttp import MultipartWriter
 from aiohttp.client import ClientSession
 from awesomeversion import AwesomeVersion
 from multidict import CIMultiDict
 
 from .definitions import OmadaControllerInfo, OmadaControllerUpdateInfo, OmadaHardwareUpgradeStatus
-from .omadasiteclient import OmadaSiteClient
-from .omadaapiconnection import OmadaApiConnection
-
-
-from .exceptions import (
-    SiteNotFound,
-)
 from .devices import (
     OmadaInterfaceDetails,
 )
+from .exceptions import (
+    SiteNotFound,
+)
+from .omadaapiconnection import OmadaApiConnection
+from .omadasiteclient import OmadaSiteClient
 
 
 class OmadaSite(NamedTuple):
@@ -120,8 +120,7 @@ class OmadaClient:
         """Upload a new PKCS12 PFX certificate to the controller."""
 
         base_name = os.path.basename(file)
-        with open(file, "rb") as upload_file:
-            cert_data = upload_file.read()
+        cert_data = await asyncio.to_thread(_read_binary_file, file)
 
         with MultipartWriter("form-data") as mpwriter:
             file_part = mpwriter.append(cert_data, CIMultiDict({"Content-Type": "application/x-pkcs12"}))
@@ -168,3 +167,8 @@ class OmadaClient:
         url = self._api.format_url("maintenance/hardware/upgradeStatus")
         result = await self._api.request("get", url)
         return OmadaHardwareUpgradeStatus(result)
+
+
+def _read_binary_file(file: str) -> bytes:
+    with open(file, "rb") as upload_file:
+        return upload_file.read()
