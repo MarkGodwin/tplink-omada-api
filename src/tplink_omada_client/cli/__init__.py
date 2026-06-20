@@ -20,6 +20,7 @@ from . import (
     command_gateway,
     command_known_clients,
     command_poe,
+    command_port_profiles,
     command_reboot,
     command_reconnect_client,
     command_set_client_name,
@@ -59,6 +60,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     command_gateway.arg_parser(subparsers)
     command_known_clients.arg_parser(subparsers)
     command_poe.arg_parser(subparsers)
+    command_port_profiles.arg_parser(subparsers)
     command_reboot.arg_parser(subparsers)
     command_reconnect_client.arg_parser(subparsers)
     command_certificate.arg_parser(subparsers)
