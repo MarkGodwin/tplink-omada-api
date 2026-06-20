@@ -1,4 +1,4 @@
-"""Implementation for 'port_profiles' command"""
+"""Implementation for 'port-profiles' command"""
 
 from argparse import ArgumentError, ArgumentParser
 
@@ -20,10 +20,7 @@ def _find_profile(profiles: list[OmadaPortProfile], profile_ref: str) -> OmadaPo
 
 def _print_profile_row(profile: OmadaPortProfile) -> None:
     profile_type = profile.raw_data.get("type", "")
-    print(
-        f"{profile.profile_id:32} {profile_type!s:4} {profile.poe_mode.name:19} "
-        f"{profile.eth_802_1x_control.name:18} {profile.name}"
-    )
+    print(f"{profile.profile_id:32} {profile_type!s:4} {profile.poe_mode.name:19} {profile.eth_802_1x_control.name:18} {profile.name}")
 
 
 def _print_profile_details(profile: OmadaPortProfile) -> None:
@@ -45,7 +42,7 @@ def _print_profile_details(profile: OmadaPortProfile) -> None:
 
 
 async def command_port_profiles(args) -> int:
-    """Executes 'port_profiles' command"""
+    """Executes 'port-profiles' command"""
     controller = get_target_argument(args)
     config = get_target_config(controller)
 
@@ -67,8 +64,8 @@ async def command_port_profiles(args) -> int:
 
 
 def arg_parser(subparsers) -> None:
-    """Configures arguments parser for 'port_profiles' command"""
-    parser: ArgumentParser = subparsers.add_parser("port_profiles", help="Lists switch port profiles")
+    """Configures arguments parser for 'port-profiles' command"""
+    parser: ArgumentParser = subparsers.add_parser("port-profiles", help="Lists switch port profiles")
     parser.set_defaults(func=command_port_profiles)
 
     parser.add_argument("profile", nargs="?", help="The port profile ID or name")
