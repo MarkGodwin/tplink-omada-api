@@ -357,6 +357,30 @@ class OmadaHardwareUpdateInfo(OmadaApiData):
         return self._data.get("fwReleaseLog", None)
 
 
+class OmadaSoftwareUpdateInfo(OmadaApiData):
+    """Information about available software controller updates."""
+
+    @property
+    def upgrade(self) -> bool:
+        """Whether a software upgrade is available."""
+        return self._data["upgrade"]
+
+    @property
+    def latest_version(self) -> str:
+        """The latest available software version."""
+        return self._data.get("latestVersion", self.current_version)
+
+    @property
+    def current_version(self) -> str:
+        """The currently installed software version."""
+        return self._data["currentVersion"]
+
+    @property
+    def release_notes(self) -> str | None:
+        """Release notes for the latest software version."""
+        return self._data.get("releaseLog", None)
+
+
 class OmadaControllerUpdateInfo(OmadaApiData):
     """Information about available controller and device firmware updates."""
 
@@ -364,6 +388,11 @@ class OmadaControllerUpdateInfo(OmadaApiData):
     def hardware(self) -> OmadaHardwareUpdateInfo | None:
         """Information about available hardware controller firmware updates."""
         return OmadaHardwareUpdateInfo(self._data["hardware"]) if "hardware" in self._data else None
+
+    @property
+    def software(self) -> OmadaSoftwareUpdateInfo | None:
+        """Information about available software controller updates."""
+        return OmadaSoftwareUpdateInfo(self._data["software"]) if "software" in self._data else None
 
 
 class OmadaHardwareUpgradeStatus(OmadaApiData):

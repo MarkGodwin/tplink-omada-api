@@ -6,6 +6,7 @@ from .definitions import (
     OmadaControllerUpdateInfo,
     OmadaHardwareUpdateInfo,
     OmadaHardwareUpgradeStatus,
+    OmadaSoftwareUpdateInfo,
 )
 from .devices import OmadaSwitchPortDetails
 from .omadaclient import OmadaClient, OmadaSite
@@ -32,6 +33,7 @@ __all__ = [
     "OmadaHardwareUpgradeStatus",
     "OmadaSite",
     "OmadaSiteClient",
+    "OmadaSoftwareUpdateInfo",
     "OmadaSwitchPortDetails",
     "OmadaVpnCategory",
     "OmadaVpnPolicy",
