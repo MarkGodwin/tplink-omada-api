@@ -228,7 +228,12 @@ class OmadaApiConnection:
         if not await self._check_login():
             await self.login()
 
-        return await self._do_request(method, url, params=params, json=json, data=data)
+        try:
+            return await self._do_request(method, url, params=params, json=json, data=data)
+        except (LoginFailed, LoginSessionClosed):
+            self._csrf_token = None
+            await self.login()
+            return await self._do_request(method, url, params=params, json=json, data=data)
 
     async def get_controller_version(self) -> AwesomeVersion:
         """Get the controller version as an AwesomeVersion object."""
