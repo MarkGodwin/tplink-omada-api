@@ -147,10 +147,7 @@ class OmadaClient:
         await self._api.request("patch", url, json=payload)
 
     async def check_firmware_updates(self) -> OmadaControllerUpdateInfo:
-        """Check if firmware updates are available for the Omada hardware controller
-
-        Software Controller updates are probably not available via this API
-        """
+        """Check if controller firmware or software updates are available."""
         result = await self._api.request("get", self._api.format_url("controller/notification/updateInfo"))
 
         return OmadaControllerUpdateInfo(result)

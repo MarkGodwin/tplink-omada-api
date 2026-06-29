@@ -13,13 +13,24 @@ async def command_firmware(args) -> int:
 
     async with to_omada_connection(config) as client:
         controller_updates = await client.check_firmware_updates()
+        controller_update_found = False
+        if controller_updates.software:
+            software_update = controller_updates.software
+            status = "\u2757 UPDATE" if software_update.upgrade else "\u2713 UP-TO-DATE"
+            print(f"{'Controller Software':<30} {software_update.current_version:<36} {software_update.latest_version:<36} {status}")
+            if software_update.upgrade and software_update.release_notes and args["release_notes"]:
+                print(f"  Release Notes: {software_update.release_notes}")
+            controller_update_found = True
+
         if controller_updates.hardware:
             hardware_update = controller_updates.hardware
             status = "\u2757 UPDATE" if hardware_update.upgrade else "\u2713 UP-TO-DATE"
-            print(f"{'Controller':<30} {hardware_update.current_version:<36} {hardware_update.latest_version:<36} {status}")
+            print(f"{'Controller Firmware':<30} {hardware_update.current_version:<36} {hardware_update.latest_version:<36} {status}")
             if hardware_update.upgrade and hardware_update.release_notes and args["release_notes"]:
                 print(f"  Release Notes: {hardware_update.release_notes}")
-        else:
+            controller_update_found = True
+
+        if not controller_update_found:
             print("No controller firmware updates available.")
 
         dump_raw_data(args, controller_updates)
