@@ -1,6 +1,5 @@
 """Tests for network data models."""
 
-import pytest
 
 from tplink_omada_client.networks import DhcpReservation
 

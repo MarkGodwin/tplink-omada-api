@@ -9,6 +9,16 @@ from .definitions import (
     OmadaSoftwareUpdateInfo,
 )
 from .devices import OmadaSwitchPortDetails
+from .networks import (
+    DhcpReservation,
+    EapAcl,
+    GatewayAcl,
+    GroupProfile,
+    IpMacBinding,
+    LanNetwork,
+    LanProfile,
+    SwitchAcl,
+)
 from .omadaclient import OmadaClient, OmadaSite
 from .omadasiteclient import (
     AccessPointPortSettings,
@@ -20,13 +30,6 @@ from .omadasiteclient import (
     SwitchPortSettings,
 )
 from .vpn import OmadaVpnCategory, OmadaVpnPolicy, OmadaVpnType
-from .networks import (
-    DhcpReservation,
-    LanNetwork, LanProfile,
-    GatewayAcl, SwitchAcl, EapAcl,
-    GroupProfile,
-    IpMacBinding,
-)
 
 __all__ = [
     "AccessPointPortSettings",
