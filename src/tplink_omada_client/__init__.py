@@ -20,10 +20,24 @@ from .omadasiteclient import (
     SwitchPortSettings,
 )
 from .vpn import OmadaVpnCategory, OmadaVpnPolicy, OmadaVpnType
+from .networks import (
+    DhcpReservation,
+    LanNetwork, LanProfile,
+    GatewayAcl, SwitchAcl, EapAcl,
+    GroupProfile,
+    IpMacBinding,
+)
 
 __all__ = [
     "AccessPointPortSettings",
+    "DhcpReservation",
+    "EapAcl",
+    "GatewayAcl",
     "GatewayPortSettings",
+    "GroupProfile",
+    "IpMacBinding",
+    "LanNetwork",
+    "LanProfile",
     "OmadaClient",
     "OmadaClientFixedAddress",
     "OmadaClientSettings",
@@ -39,6 +53,7 @@ __all__ = [
     "OmadaVpnPolicy",
     "OmadaVpnType",
     "PortProfileOverrides",
+    "SwitchAcl",
     "SwitchPortSettings",
     "clients",
     "definitions",
