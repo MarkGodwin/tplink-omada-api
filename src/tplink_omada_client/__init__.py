@@ -3,6 +3,8 @@
 from . import clients, definitions, exceptions
 from .definitions import (
     OmadaControllerInfo,
+    OmadaControllerStatus,
+    OmadaControllerType,
     OmadaControllerUpdateInfo,
     OmadaHardwareUpdateInfo,
     OmadaHardwareUpgradeStatus,
@@ -28,6 +30,8 @@ __all__ = [
     "OmadaClientFixedAddress",
     "OmadaClientSettings",
     "OmadaControllerInfo",
+    "OmadaControllerStatus",
+    "OmadaControllerType",
     "OmadaControllerUpdateInfo",
     "OmadaHardwareUpdateInfo",
     "OmadaHardwareUpgradeStatus",

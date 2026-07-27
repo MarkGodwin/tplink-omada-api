@@ -80,6 +80,34 @@ class OmadaControllerInfo(OmadaApiData):
         return self._data.get("omadaCloudUrl")
 
 
+class OmadaControllerType(OmadaApiData):
+    """Information returned by the Omada controller type endpoint."""
+
+    @property
+    def is_soft_controller(self) -> bool:
+        """Whether this is an Omada Software Controller."""
+        return self._data["isSoftController"]
+
+
+class OmadaControllerStatus(OmadaApiData):
+    """Status information returned by the Omada controller."""
+
+    @property
+    def mac_address(self) -> str:
+        """Controller MAC address."""
+        return self._data["macAddress"]
+
+    @property
+    def uptime(self) -> int:
+        """Controller uptime in seconds."""
+        return self._data["upTime"]
+
+    @property
+    def controller_version(self) -> str:
+        """Controller software version."""
+        return self._data["controllerVersion"]
+
+
 class DeviceStatus(IntEnum):
     """Known status codes for devices."""
 
@@ -354,7 +382,10 @@ class OmadaHardwareUpdateInfo(OmadaApiData):
     @property
     def release_notes(self) -> str | None:
         """Release notes for the latest firmware version."""
-        return self._data.get("fwReleaseLog", None)
+        notes = self._data.get("fwReleaseLog")
+        if notes is None:
+            notes = self._data.get("releaseLog")
+        return notes
 
 
 class OmadaSoftwareUpdateInfo(OmadaApiData):
@@ -378,7 +409,10 @@ class OmadaSoftwareUpdateInfo(OmadaApiData):
     @property
     def release_notes(self) -> str | None:
         """Release notes for the latest software version."""
-        return self._data.get("releaseLog", None)
+        notes = self._data.get("releaseLog")
+        if notes is None:
+            notes = self._data.get("fwReleaseLog")
+        return notes
 
 
 class OmadaControllerUpdateInfo(OmadaApiData):

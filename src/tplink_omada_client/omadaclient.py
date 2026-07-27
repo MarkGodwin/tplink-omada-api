@@ -9,7 +9,13 @@ from aiohttp.client import ClientSession
 from awesomeversion import AwesomeVersion
 from multidict import CIMultiDict
 
-from .definitions import OmadaControllerInfo, OmadaControllerUpdateInfo, OmadaHardwareUpgradeStatus
+from .definitions import (
+    OmadaControllerInfo,
+    OmadaControllerStatus,
+    OmadaControllerType,
+    OmadaControllerUpdateInfo,
+    OmadaHardwareUpgradeStatus,
+)
 from .devices import (
     OmadaInterfaceDetails,
 )
@@ -76,6 +82,20 @@ class OmadaClient:
         result = await self._api.request("get", self._api.format_url("maintenance/uiInterface"))
 
         return OmadaInterfaceDetails(result).controller_name
+
+    async def get_controller_type(self) -> OmadaControllerType:
+        """Get the Omada controller type."""
+        result = await self._api.request("get", self._api.format_url("anon/controllerType"))
+
+        return OmadaControllerType(result)
+
+    async def get_controller_status(self) -> OmadaControllerStatus:
+        """Get status information for the Omada controller."""
+        result = await self._api.request(
+            "get", self._api.format_url("maintenance/controllerStatus")
+        )
+
+        return OmadaControllerStatus(result)
 
     async def get_sites(self) -> list[OmadaSite]:
         """Get basic list of sites the user can see"""
