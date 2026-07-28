@@ -93,6 +93,16 @@ class OmadaControllerStatus(OmadaApiData):
     """Status information returned by the Omada controller."""
 
     @property
+    def name(self) -> str | None:
+        """Controller display name."""
+        name = self._data.get("name")
+        if not isinstance(name, str):
+            return None
+
+        name = name.strip()
+        return name or None
+
+    @property
     def mac_address(self) -> str:
         """Controller MAC address."""
         return self._data["macAddress"]
@@ -106,6 +116,16 @@ class OmadaControllerStatus(OmadaApiData):
     def controller_version(self) -> str:
         """Controller software version."""
         return self._data["controllerVersion"]
+
+    @property
+    def model(self) -> str | None:
+        """Controller hardware model, when reported by the controller."""
+        model = self._data.get("model")
+        if not isinstance(model, str):
+            return None
+
+        model = model.strip()
+        return model or None
 
 
 class DeviceStatus(IntEnum):
@@ -387,6 +407,16 @@ class OmadaHardwareUpdateInfo(OmadaApiData):
             notes = self._data.get("releaseLog")
         return notes
 
+    @property
+    def download_link(self) -> str | None:
+        """Download link for the available controller update."""
+        download_link = self._data.get("downloadLink")
+        if not isinstance(download_link, str):
+            return None
+
+        download_link = download_link.strip()
+        return download_link or None
+
 
 class OmadaSoftwareUpdateInfo(OmadaApiData):
     """Information about available software controller updates."""
@@ -413,6 +443,16 @@ class OmadaSoftwareUpdateInfo(OmadaApiData):
         if notes is None:
             notes = self._data.get("fwReleaseLog")
         return notes
+
+    @property
+    def download_link(self) -> str | None:
+        """Download link for the available controller update."""
+        download_link = self._data.get("downloadLink")
+        if not isinstance(download_link, str):
+            return None
+
+        download_link = download_link.strip()
+        return download_link or None
 
 
 class OmadaControllerUpdateInfo(OmadaApiData):

@@ -44,6 +44,71 @@ def test_controller_update_info_exposes_unified_release_notes(
     assert selected_update.release_notes == release_notes
 
 
+@pytest.mark.parametrize(
+    "payload_key",
+    [
+        "hardware",
+        "software",
+    ],
+)
+def test_controller_update_info_exposes_download_link(
+    payload_key: str,
+) -> None:
+    """Hardware and software updates expose an optional download link."""
+    update_info = OmadaControllerUpdateInfo(
+        {
+            payload_key: {
+                "upgrade": True,
+                "currentVersion": "1.0.0",
+                "latestVersion": "1.0.1",
+                "downloadLink": (
+                    "  https://ota-download.tplinkcloud.com/"
+                    "firmware/controller-update.bin  "
+                ),
+            }
+        }
+    )
+
+    selected_update = (
+        update_info.hardware
+        if payload_key == "hardware"
+        else update_info.software
+    )
+
+    assert selected_update is not None
+    assert selected_update.download_link == (
+        "https://ota-download.tplinkcloud.com/"
+        "firmware/controller-update.bin"
+    )
+
+
+@pytest.mark.parametrize(
+    ("download_link", "include_field"),
+    [
+        ("", True),
+        ("   ", True),
+        (None, True),
+        (None, False),
+    ],
+)
+def test_controller_update_info_handles_missing_download_link(
+    download_link: str | None,
+    include_field: bool,
+) -> None:
+    """Missing, empty, or non-string download links are exposed as None."""
+    software = {
+        "upgrade": False,
+        "currentVersion": "6.2.10.17",
+    }
+    if include_field:
+        software["downloadLink"] = download_link
+
+    update_info = OmadaControllerUpdateInfo({"software": software})
+
+    assert update_info.software is not None
+    assert update_info.software.download_link is None
+
+
 def test_controller_update_info_exposes_only_hardware_update() -> None:
     """Hardware update payloads do not create a software update."""
     update_info = OmadaControllerUpdateInfo(
@@ -61,6 +126,7 @@ def test_controller_update_info_exposes_only_hardware_update() -> None:
     assert update_info.hardware.current_version == "1.0.0"
     assert update_info.hardware.latest_version == "1.0.0"
     assert update_info.hardware.release_notes is None
+    assert update_info.hardware.download_link is None
 
 
 def test_controller_update_info_exposes_only_software_update() -> None:
@@ -80,3 +146,4 @@ def test_controller_update_info_exposes_only_software_update() -> None:
     assert update_info.software.current_version == "6.2.10.17"
     assert update_info.software.latest_version == "6.2.10.17"
     assert update_info.software.release_notes is None
+    assert update_info.software.download_link is None

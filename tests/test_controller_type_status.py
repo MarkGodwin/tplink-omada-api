@@ -30,19 +30,37 @@ def test_controller_type_data(
     assert controller_type.is_soft_controller is expected
 
 
-def test_controller_status_data() -> None:
-    """Controller status exposes MAC address, uptime, and version."""
-    controller_status = OmadaControllerStatus(
-        {
-            "macAddress": "FE-54-00-76-76-34",
-            "upTime": 1667366874,
-            "controllerVersion": "6.2.10.17",
-        }
-    )
+@pytest.mark.parametrize(
+    ("model", "expected"),
+    [
+        ("OC200", "OC200"),
+        ("  OC300  ", "OC300"),
+        ("", None),
+        ("   ", None),
+        (None, None),
+    ],
+)
+def test_controller_status_data(
+    model: str | None,
+    expected: str | None,
+) -> None:
+    """Controller status exposes its standard fields and optional model."""
+    data = {
+        "name": "Omada RealSW",
+        "macAddress": "FE-54-00-76-76-34",
+        "upTime": 1667366874,
+        "controllerVersion": "6.2.10.17",
+    }
+    if model is not None:
+        data["model"] = model
 
+    controller_status = OmadaControllerStatus(data)
+
+    assert controller_status.name == "Omada RealSW"
     assert controller_status.mac_address == "FE-54-00-76-76-34"
     assert controller_status.uptime == 1667366874
     assert controller_status.controller_version == "6.2.10.17"
+    assert controller_status.model == expected
 
 
 @pytest.mark.asyncio
@@ -73,17 +91,21 @@ async def test_get_controller_status() -> None:
     client._api.format_url.return_value = "controller-status-url"
     client._api.request = AsyncMock(
         return_value={
+            "name": "Omada RealSW",
             "macAddress": "FE-54-00-76-76-34",
             "upTime": 1667366874,
             "controllerVersion": "6.2.10.17",
+            "model": "OC200",
         }
     )
 
     result = await client.get_controller_status()
 
+    assert result.name == "Omada RealSW"
     assert result.mac_address == "FE-54-00-76-76-34"
     assert result.uptime == 1667366874
     assert result.controller_version == "6.2.10.17"
+    assert result.model == "OC200"
     client._api.format_url.assert_called_once_with(
         "maintenance/controllerStatus"
     )
