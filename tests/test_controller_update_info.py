@@ -95,6 +95,50 @@ def test_controller_update_info_reads_software_update():
     assert update_info.release_url == "https://example.com/software"
 
 
+def test_controller_update_info_hardware_without_current_version():
+    """Hardware controllers (e.g. OC300) may omit currentVersion from the update info."""
+    update_info = OmadaControllerUpdateInfo({
+        "hardware": {
+            "upgrade": False,
+            "latestVersion": "6.3.0.110",
+        }
+    })
+
+    assert update_info.hardware is not None
+    assert update_info.hardware.upgrade is False
+    assert update_info.hardware.current_version is None
+    assert update_info.hardware.latest_version == "6.3.0.110"
+    assert update_info.current_version is None
+    assert update_info.latest_version == "6.3.0.110"
+
+
+def test_controller_update_info_hardware_without_any_version():
+    """Missing currentVersion and latestVersion are both reported as None."""
+    update_info = OmadaControllerUpdateInfo({"hardware": {"upgrade": False}})
+
+    assert update_info.hardware is not None
+    assert update_info.hardware.current_version is None
+    assert update_info.hardware.latest_version is None
+    assert update_info.current_version is None
+    assert update_info.latest_version is None
+
+
+def test_controller_update_info_software_without_current_version():
+    """Software controller updates tolerate a missing currentVersion."""
+    update_info = OmadaControllerUpdateInfo({
+        "software": {
+            "upgrade": True,
+            "latestVersion": "6.2.14.6 Build 20260617091728",
+        }
+    })
+
+    assert update_info.software is not None
+    assert update_info.software.current_version is None
+    assert update_info.software.latest_version == "6.2.14.6 Build 20260617091728"
+    assert update_info.current_version is None
+    assert update_info.latest_version == "6.2.14.6 Build 20260617091728"
+
+
 def test_controller_update_info_reads_no_update_defaults():
     """Controller update info returns no normalized update when no update exists."""
     update_info = OmadaControllerUpdateInfo({})
