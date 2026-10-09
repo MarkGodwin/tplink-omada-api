@@ -533,7 +533,7 @@ class OmadaControllerUpdateInfo(OmadaApiData):
     @property
     def hardware(self) -> OmadaHardwareUpdateInfo | None:
         """Information about available hardware controller firmware updates."""
-        if "hardware" not in self._data:
+        if self._data.get("hardware") is None:
             return None
 
         return OmadaHardwareUpdateInfo(self._data["hardware"])
@@ -541,7 +541,7 @@ class OmadaControllerUpdateInfo(OmadaApiData):
     @property
     def software(self) -> OmadaSoftwareUpdateInfo | None:
         """Information about available software controller updates."""
-        if "software" not in self._data:
+        if self._data.get("software") is None:
             return None
 
         return OmadaSoftwareUpdateInfo(self._data["software"])
