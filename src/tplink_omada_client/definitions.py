@@ -452,14 +452,14 @@ class OmadaHardwareUpdateInfo(OmadaApiData):
         return self._data["upgrade"]
 
     @property
-    def latest_version(self) -> str:
+    def latest_version(self) -> str | None:
         """The latest available firmware version."""
         return self._data.get("latestVersion", self.current_version)
 
     @property
-    def current_version(self) -> str:
-        """The currently installed firmware version."""
-        return self._data["currentVersion"]
+    def current_version(self) -> str | None:
+        """The currently installed firmware version, if the controller reports it."""
+        return self._data.get("currentVersion")
 
     @property
     def release_notes(self) -> str | None:
@@ -494,14 +494,14 @@ class OmadaSoftwareUpdateInfo(OmadaApiData):
         return self._data["upgrade"]
 
     @property
-    def latest_version(self) -> str:
+    def latest_version(self) -> str | None:
         """The latest available software version."""
         return self._data.get("latestVersion", self.current_version)
 
     @property
-    def current_version(self) -> str:
-        """The currently installed software version."""
-        return self._data["currentVersion"]
+    def current_version(self) -> str | None:
+        """The currently installed software version, if the controller reports it."""
+        return self._data.get("currentVersion")
 
     @property
     def release_notes(self) -> str | None:
