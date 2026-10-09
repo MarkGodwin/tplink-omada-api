@@ -31,6 +31,7 @@ from . import (
     command_switch,
     command_switch_ports,
     command_switches,
+    command_sync_names,
     command_target,
     command_targets,
     command_topology,
@@ -74,6 +75,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     command_switch.arg_parser(subparsers)
     command_switch_ports.arg_parser(subparsers)
     command_switches.arg_parser(subparsers)
+    command_sync_names.arg_parser(subparsers)
     command_target.arg_parser(subparsers)
     command_targets.arg_parser(subparsers)
     command_topology.arg_parser(subparsers)

@@ -18,7 +18,8 @@ classifiers = [
 ]
 dependencies = [
   "aiohttp >= 3.12.2, <4",
-  "awesomeversion >= 25.8.0"
+  "awesomeversion >= 25.8.0",
+  "dnspython >= 2.7.0, <3"
 ]
 
 [project.scripts]
