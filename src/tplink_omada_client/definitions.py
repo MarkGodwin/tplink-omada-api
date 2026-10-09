@@ -481,8 +481,13 @@ class OmadaHardwareUpdateInfo(OmadaApiData):
 
     @property
     def release_url(self) -> str | None:
-        """URL with information or a download for the latest release."""
-        return self.download_link
+        """URL with information about the latest release."""
+        release_url = self._data.get("releaseUrl")
+        if not isinstance(release_url, str):
+            return None
+
+        release_url = release_url.strip()
+        return release_url or None
 
 
 class OmadaSoftwareUpdateInfo(OmadaApiData):
@@ -523,8 +528,13 @@ class OmadaSoftwareUpdateInfo(OmadaApiData):
 
     @property
     def release_url(self) -> str | None:
-        """URL with information or a download for the latest release."""
-        return self.download_link
+        """URL with information about the latest release."""
+        release_url = self._data.get("releaseUrl")
+        if not isinstance(release_url, str):
+            return None
+
+        release_url = release_url.strip()
+        return release_url or None
 
 
 class OmadaControllerUpdateInfo(OmadaApiData):
