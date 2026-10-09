@@ -41,6 +41,7 @@ def test_controller_update_info_preserves_valid_sections(section, update_type, o
         "latestVersion": "1.0.1",
         "fwReleaseLog": "Firmware notes.",
         "releaseLog": "Secondary firmware notes.",
+        "releaseUrl": "https://example.com/firmware-release-notes",
         "downloadLink": "https://example.com/firmware",
     }
     software = {
@@ -49,6 +50,7 @@ def test_controller_update_info_preserves_valid_sections(section, update_type, o
         "latestVersion": "6.3.0",
         "releaseLog": "Software notes.",
         "fwReleaseLog": "Secondary software notes.",
+        "releaseUrl": "https://example.com/software-release-notes",
         "downloadLink": "https://example.com/software",
     }
     sections = {"hardware": hardware, "software": software}
@@ -75,7 +77,8 @@ def test_controller_update_info_preserves_valid_sections(section, update_type, o
     assert update_info.current_version == expected["currentVersion"]
     assert update_info.latest_version == expected["latestVersion"]
     assert update_info.release_notes == expected["fwReleaseLog" if selected == "hardware" else "releaseLog"]
-    assert update_info.release_url == expected["downloadLink"]
+    assert update_info.release_url == expected["releaseUrl"]
+    assert update_info.update.download_link == expected["downloadLink"]
 
 
 @pytest.mark.parametrize(

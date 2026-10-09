@@ -617,7 +617,7 @@ wheels = [
 
 [[package]]
 name = "tplink-omada-client"
-version = "1.5.12"
+version = "1.5.13"
 source = { editable = "." }
 dependencies = [
     { name = "aiohttp" },
