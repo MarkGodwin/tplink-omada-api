@@ -55,7 +55,38 @@ class DhcpReservation(OmadaApiData):
 class LanNetwork(OmadaApiData):
     """LAN network configuration."""
 
-    # Properties defined during vlan-listing implementation
+    @property
+    def id(self) -> str:
+        """Controller ID for the LAN network."""
+        return self._data["id"]
+
+    @property
+    def name(self) -> str:
+        """LAN network name."""
+        return self._data["name"]
+
+    @property
+    def purpose(self) -> str:
+        """Controller network purpose."""
+        return self._data["purpose"]
+
+    @property
+    def vlan_id(self) -> int | None:
+        """VLAN ID, when configured."""
+        return self._data.get("vlan")
+
+    @property
+    def gateway_subnet(self) -> str | None:
+        """Gateway IPv4 subnet in CIDR notation, when configured."""
+        return self._data.get("gatewaySubnet")
+
+    @property
+    def dhcp_enabled(self) -> bool | None:
+        """Whether DHCP is enabled for the network, when reported."""
+        dhcp_settings = self._data.get("dhcpSettings")
+        if dhcp_settings is None:
+            return None
+        return dhcp_settings.get("enable")
 
 
 class LanProfile(OmadaApiData):
