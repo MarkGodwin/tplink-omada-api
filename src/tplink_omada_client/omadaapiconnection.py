@@ -3,6 +3,7 @@
 import re
 import time
 from collections.abc import AsyncIterable
+from dataclasses import dataclass, field
 from typing import Any
 from urllib.parse import urljoin, urlsplit
 
@@ -21,6 +22,30 @@ from .exceptions import (
 )
 
 _PAGE_SIZE: int = 100
+
+
+@dataclass
+class _RequestObservation:
+    """Per-operation handoff history; authentication calls do not share it."""
+
+    _attempts: list[str] = field(default_factory=list)
+
+    @property
+    def attempt_count(self) -> int:
+        return len(self._attempts)
+
+    @property
+    def has_unresolved_attempt(self) -> bool:
+        return "unresolved" in self._attempts
+
+    @property
+    def acknowledged(self) -> bool:
+        return "acknowledged" in self._attempts
+
+    def acknowledge(self, attempt: int, content: Any) -> None:
+        if not isinstance(content, dict) or type(content.get("errorCode")) is not int or content["errorCode"] != 0:
+            raise RequestFailed(-30109, "Unexpected mutation acknowledgement")
+        self._attempts[attempt] = "acknowledged"
 
 
 class OmadaApiConnection:
@@ -128,7 +153,7 @@ class OmadaApiConnection:
             if logged_in:
                 self._last_logon = time.time()
             return logged_in
-        except:  # pylint: disable=bare-except  # noqa: E722
+        except Exception:  # noqa: BLE001 - retain failed-status re-login policy, but not BaseException cancellation
             return False
 
     async def get_controller_info(self) -> OmadaControllerInfo:
@@ -230,17 +255,23 @@ class OmadaApiConnection:
             for item in data:
                 yield item
 
-    async def request(self, method: str, url: str, params=None, json=None, data: Payload | None = None) -> Any:
-        """Perform a request specific to the controlller, with authentication"""
+    async def request(
+        self, method: str, url: str, params=None, json=None, data: Payload | None = None,
+        *, observation: _RequestObservation | None = None,
+    ) -> Any:
+        """Perform an authenticated request, optionally observing its handoffs."""
 
         if not await self._check_login():
             await self.login()
 
+        kwargs: dict[str, Any] = {"params": params, "json": json, "data": data}
+        if observation is not None:
+            kwargs["observation"] = observation
         try:
-            return await self._do_request(method, url, params=params, json=json, data=data)
+            return await self._do_request(method, url, **kwargs)
         except (LoginFailed, LoginSessionClosed):
             await self.login()
-            return await self._do_request(method, url, params=params, json=json, data=data)
+            return await self._do_request(method, url, **kwargs)
 
     async def get_controller_version(self) -> AwesomeVersion:
         """Get the controller version as an AwesomeVersion object."""
@@ -249,7 +280,10 @@ class OmadaApiConnection:
             version, _ = await self._get_controller_info()
         return AwesomeVersion(version)
 
-    async def _do_request(self, method: str, url: str, params=None, json=None, data: Payload | None = None) -> Any:
+    async def _do_request(
+        self, method: str, url: str, params=None, json=None, data: Payload | None = None,
+        *, observation: _RequestObservation | None = None,
+    ) -> Any:
         """Perform a request on the controller, and unpack the response."""
 
         session = await self._get_session()
@@ -263,6 +297,11 @@ class OmadaApiConnection:
             headers["Referer"] = self._url + "/"
             headers["Origin"] = self._url
 
+        attempt = 0
+        if observation is not None:
+            attempt = observation.attempt_count
+            observation._attempts.append("unresolved")
+
         try:
             async with session.request(
                 method,
@@ -273,31 +312,34 @@ class OmadaApiConnection:
                 data=data,
                 ssl=self._verify_ssl,
             ) as response:
-                if response.status != 200:
-                    if response.content_type == "application/json":
-                        content = await response.json(encoding="utf-8")
-                        self._check_application_errors(content)
+                return await self._unpack_response(response, observation, attempt)
 
-                    raise RequestFailed(response.status, "HTTP Request Error")
-
-                # If something goes wrong with the login session, Omada requests return "success", and a login page. :/
-                if response.content_type != "application/json":
-                    raise LoginSessionClosed()
-
-                content = await response.json(encoding="utf-8")
-                self._check_application_errors(content)
-
-                # Unpack response data
-                if "result" in content:
-                    return content["result"]
-                return content
-
+        except RequestFailed as err:
+            if observation is not None and err.application_rejection:
+                observation._attempts[attempt] = "rejected"
+            raise
         except client_exceptions.InvalidURL as err:
             raise BadControllerUrl(err) from err
         except client_exceptions.ClientConnectionError as err:
             raise ConnectionFailed(err) from err
         except client_exceptions.ClientError as err:
             raise RequestFailed(0, f"Unexpected error: {err}") from None
+
+    async def _unpack_response(self, response, observation: _RequestObservation | None, attempt: int) -> Any:
+        """Validate and unpack an HTTP response, retaining application provenance."""
+        if response.status != 200:
+            if response.content_type == "application/json":
+                self._check_application_errors(await response.json(encoding="utf-8"))
+            raise RequestFailed(response.status, "HTTP Request Error")
+        if response.content_type != "application/json":
+            raise LoginSessionClosed()
+        content = await response.json(encoding="utf-8")
+        self._check_application_errors(content)
+        if observation is not None:
+            observation.acknowledge(attempt, content)
+        if "result" in content:
+            return content["result"]
+        return content
 
     def _check_application_errors(self, response):
         if not isinstance(response, dict):
@@ -307,5 +349,11 @@ class OmadaApiConnection:
         if response["errorCode"] == 0:
             return
         if response["errorCode"] == -30109:
-            raise LoginFailed(response["errorCode"], response["msg"])
-        raise RequestFailed(response["errorCode"], response["msg"])
+            raise LoginFailed(
+                response["errorCode"], response["msg"],
+                application_rejection=type(response["errorCode"]) is int,
+            )
+        raise RequestFailed(
+            response["errorCode"], response["msg"],
+            application_rejection=type(response["errorCode"]) is int,
+        )
