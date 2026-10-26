@@ -2,6 +2,8 @@
 
 import asyncio
 
+import pytest
+
 from tplink_omada_client import cli
 from tplink_omada_client.cli import command_controller_info
 from tplink_omada_client.cli.config import ControllerConfig
@@ -135,8 +137,9 @@ def test_controller_info_outputs_hardware_controller_indication(monkeypatch, cap
     assert "Controller model: OC300" in output
 
 
-def test_controller_info_does_not_show_generic_model_fallback(monkeypatch, capsys):
-    connection = FakeConnection(status_data=_controller_status_data(model="  "))
+@pytest.mark.parametrize("model", [None, "", "  ", 123, True])
+def test_controller_info_does_not_show_generic_model_fallback(monkeypatch, capsys, model):
+    connection = FakeConnection(status_data=_controller_status_data(model=model))
     _patch_connection(monkeypatch, connection)
 
     result = asyncio.run(command_controller_info.command_controller_info({"target": "", "dump": False}))

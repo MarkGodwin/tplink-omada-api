@@ -130,11 +130,16 @@ class OmadaControllerStatus(OmadaApiData):
     @property
     def model(self) -> str:
         """Controller hardware model, or a generic fallback."""
+        return self.reported_model or "Controller"
+
+    @property
+    def reported_model(self) -> str | None:
+        """Controller hardware model reported by Omada, when available."""
         model = self._data.get("model")
         if isinstance(model, str) and (model := model.strip()):
             return model
 
-        return "Controller"
+        return None
 
 
 class DeviceStatus(IntEnum):

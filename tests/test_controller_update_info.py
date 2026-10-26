@@ -1,5 +1,7 @@
 """Tests for controller status and update notification data."""
 
+import pytest
+
 from tplink_omada_client.definitions import (
     OmadaControllerStatus,
     OmadaControllerUpdateInfo,
@@ -37,6 +39,27 @@ def test_controller_status_uses_generic_model_fallback():
     })
 
     assert status.model == "Controller"
+
+
+@pytest.mark.parametrize(
+    ("data", "expected"),
+    [
+        ({"model": "  OC200  "}, "OC200"),
+        ({"model": "Controller"}, "Controller"),
+        ({}, None),
+        ({"model": None}, None),
+        ({"model": ""}, None),
+        ({"model": "  "}, None),
+        ({"model": 123}, None),
+        ({"model": True}, None),
+    ],
+)
+def test_controller_status_reported_model(data, expected):
+    """Reported models are normalized without changing the generic fallback."""
+    status = OmadaControllerStatus(data)
+
+    assert status.reported_model == expected
+    assert status.model == (expected or "Controller")
 
 
 def test_controller_update_info_reads_hardware_update():

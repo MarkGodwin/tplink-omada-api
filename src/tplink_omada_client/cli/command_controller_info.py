@@ -3,8 +3,6 @@
 from argparse import ArgumentParser
 from typing import Any
 
-from tplink_omada_client.definitions import OmadaControllerStatus
-
 from .config import get_target_config, to_omada_connection
 from .util import dump_raw_data, get_target_argument
 
@@ -14,14 +12,6 @@ def _format_value(value: Any) -> str:
     if value is None:
         return "Unknown"
     return str(value)
-
-
-def _format_model(status: OmadaControllerStatus) -> str:
-    """Format the controller model only when Omada reported a real model field."""
-    model = status.raw_data.get("model")
-    if isinstance(model, str):
-        model = model.strip()
-    return _format_value(model or None)
 
 
 async def command_controller_info(args) -> int:
@@ -47,7 +37,7 @@ async def command_controller_info(args) -> int:
         print(f"Combined gateway: {_format_value(controller_type.combined_gateway)}")
         print(f"Controller MAC: {controller_status.mac}")
         print(f"Controller uptime: {controller_status.uptime}")
-        print(f"Controller model: {_format_model(controller_status)}")
+        print(f"Controller model: {_format_value(controller_status.reported_model)}")
         print(f"Controller category: {_format_value(info.omadac_category)}")
         print(f"Configured: {_format_value(info.configured)}")
         print(f"Root registered: {_format_value(info.registered_root)}")
