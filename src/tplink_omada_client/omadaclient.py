@@ -169,8 +169,31 @@ class OmadaClient:
     async def check_firmware_updates(self) -> OmadaControllerUpdateInfo:
         """Check if controller firmware or software updates are available."""
         result = await self._api.request("get", self._api.format_url("controller/notification/updateInfo"))
+        update_info = OmadaControllerUpdateInfo(result)
+        if update_info.update is not None or await self.get_controller_version() < AwesomeVersion("6.3"):
+            return update_info
 
-        return OmadaControllerUpdateInfo(result)
+        if not (await self.get_controller_type()).is_soft_controller:
+            return update_info
+
+        # Software controllers on 6.3 return empty notifications and use release channels instead.
+        result = await self._api.request("get", self._api.format_url("maintenance/software/channelUpdate"))
+        channel = next((
+            entry for entry in result.get("upgradeList", [])
+            if entry["channel"] == result.get("currentChannel")
+        ), None)
+        if channel is None:
+            return update_info
+
+        current_version = result.get("currentControllerVer")
+        return OmadaControllerUpdateInfo({"software": {
+            "upgrade": channel["update"],
+            "currentVersion": current_version,
+            "latestVersion": channel.get("latestVersion", current_version) if channel["update"] else current_version,
+            "releaseLog": channel.get("releaseLog"),
+            "releaseUrl": channel.get("releaseUrl"),
+            "downloadLink": channel.get("downloadUrl"),
+        }})
 
     async def install_controller_firmware(self, target_version: str) -> bool:
         """Install controller firmware remotely when supported."""
