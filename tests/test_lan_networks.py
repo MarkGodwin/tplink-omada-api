@@ -430,3 +430,28 @@ async def test_vlan_transport_readback_failure_preserves_recovery_guidance(vlan_
     assert caught.value.__cause__ is failure
     assert vlan_site._api.request.await_count == 1
     assert vlan_site.get_lan_networks.await_count == 2
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("operation", ["create", "update", "delete"])
+@pytest.mark.parametrize("timed_out", [False, True])
+async def test_vlan_write_transport_failure_preserves_recovery_guidance_without_retry(vlan_site, operation, timed_out):
+    from tplink_omada_client.exceptions import ConnectionFailed, OmadaClientException
+    from tplink_omada_client.vlans import VlanCreate, VlanUpdate
+
+    before = LanNetwork(vlan_site._vlan_fixture["network"])
+    vlan_site.get_lan_networks = AsyncMock(return_value=[] if operation == "create" else [before])
+    failure = TimeoutError("response timed out") if timed_out else ConnectionFailed("response disconnected")
+    vlan_site._api.request.side_effect = failure
+
+    with pytest.raises(OmadaClientException, match=f"VLAN {operation}.*may have succeeded.*inspect controller state.*retry") as caught:
+        if operation == "create":
+            await vlan_site.create_vlan(VlanCreate("example-vlan", 3990))
+        elif operation == "update":
+            await vlan_site.update_vlan(before.id, VlanUpdate(name="renamed"))
+        else:
+            await vlan_site.delete_vlan(before.id)
+
+    assert caught.value.__cause__ is failure
+    assert vlan_site._api.request.await_count == 1
+    assert vlan_site.get_lan_networks.await_count == 1

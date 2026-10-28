@@ -42,7 +42,7 @@ from .devices import (
     OmadaSwitchPort,
     OmadaSwitchPortDetails,
 )
-from .exceptions import InvalidDevice, OmadaClientException
+from .exceptions import ConnectionFailed, InvalidDevice, OmadaClientException
 from .networks import DhcpReservation, LanNetwork
 from .omadaapiconnection import OmadaApiConnection
 from .topology import OmadaTopology
@@ -922,6 +922,19 @@ class OmadaSiteClient:
                 return False
         return True
 
+    async def _write_vlan(self, operation: str, method: str, url: str, payload: dict | None = None) -> None:
+        """Send one write, retaining recovery guidance if its outcome is unknown."""
+        try:
+            if payload is None:
+                await self._api.request(method, url)
+            else:
+                await self._api.request(method, url, json=payload)
+        except (ConnectionFailed, TimeoutError) as error:
+            raise OmadaClientException(
+                f"VLAN {operation} response lost; write may have succeeded; "
+                "inspect controller state before retrying"
+            ) from error
+
     async def _get_vlan_readback(self, operation: str) -> list[LanNetwork]:
         """Read after acknowledgement, retaining ambiguous-success recovery guidance."""
         try:
@@ -947,7 +960,7 @@ class OmadaSiteClient:
     async def create_vlan(self, settings: VlanCreate) -> LanNetwork:
         """Create one VLAN-only network and verify it; no routing/DHCP changes."""
         payload = await self.preview_vlan_create(settings)
-        await self._api.request("post", self._api.format_url("setting/lan/vlans", self._site_id), json=payload)
+        await self._write_vlan("create", "post", self._api.format_url("setting/lan/vlans", self._site_id), payload)
         networks = await self._get_vlan_readback("create")
         matches = [n for n in networks if n.raw_data.get("name") == settings.name and n.vlan_id == settings.vlan_id]
         return self._verify_vlan_readback(matches, payload, "create", networks)
@@ -957,7 +970,7 @@ class OmadaSiteClient:
         network, payload = await self.preview_vlan_update(target, settings, by_id=by_id)
         if payload["name"] == network.name and payload["vlan"] == network.vlan_id:
             return network
-        await self._api.request("patch", self._api.format_url(f"setting/lan/networks/{network.id}", self._site_id), json=payload)
+        await self._write_vlan("update", "patch", self._api.format_url(f"setting/lan/networks/{network.id}", self._site_id), payload)
         networks = await self._get_vlan_readback("update")
         matches = [n for n in networks if n.raw_data.get("id") == network.id]
         return self._verify_vlan_readback(matches, payload, "update", networks)
@@ -965,7 +978,7 @@ class OmadaSiteClient:
     async def delete_vlan(self, target: str, *, by_id: bool = False) -> None:
         """Delete and verify absence; use by_id=True for an already-resolved ID."""
         network = await self.preview_vlan_delete(target, by_id=by_id)
-        await self._api.request("delete", self._api.format_url(f"setting/lan/networks/{network.id}", self._site_id))
+        await self._write_vlan("delete", "delete", self._api.format_url(f"setting/lan/networks/{network.id}", self._site_id))
         if any(
             not isinstance(n.raw_data.get("id"), str) or not n.id or n.id == network.id
             for n in await self._get_vlan_readback("delete")

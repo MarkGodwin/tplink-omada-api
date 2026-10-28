@@ -147,7 +147,7 @@ The library provides typed `VlanCreate` and `VlanUpdate` requests in `tplink_oma
 
 When applying a previously resolved network ID through the library, pass `by_id=True` to `update_vlan` or `delete_vlan` (also supported by their preview helpers). This fails if that ID disappears instead of treating it as another network's name. The CLI automatically uses this strict identity mode after its initial ID/name selection.
 
-On a read-back failure, inspect the controller before retrying: a write may already have succeeded. There is no automatic write retry or broad cleanup at the lifecycle layer. To reverse an update, explicitly apply the old name/ID; to remove a created test network, preview deletion by its exact ID and explicitly apply it. Do not recreate a deleted network expecting restored IDs or dependencies. Routed LAN, gateway subnet and DHCP mutations remain a separate validation gate.
+On a write timeout/disconnect or read-back failure, inspect the controller before retrying: a write may already have succeeded. There is no automatic write retry or broad cleanup at the lifecycle layer. To reverse an update, explicitly apply the old name/ID; to remove a created test network, preview deletion by its exact ID and explicitly apply it. Do not recreate a deleted network expecting restored IDs or dependencies. Routed LAN, gateway subnet and DHCP mutations remain a separate validation gate.
 
 To see a list of all the available commands, run:
 

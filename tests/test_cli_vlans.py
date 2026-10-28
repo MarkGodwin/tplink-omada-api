@@ -190,6 +190,44 @@ def test_vlan_cli_apply_controller_error_does_not_claim_success(mutation_cli, ca
     assert "Verified" not in captured.out
 
 
+@pytest.mark.parametrize("operation", ["create", "modify", "delete"])
+@pytest.mark.parametrize("timed_out", [False, True])
+def test_vlan_cli_lost_write_response_reports_unknown_outcome(mutation_cli, capsys, operation, timed_out):
+    from tplink_omada_client.exceptions import ConnectionFailed
+
+    state, network, api = mutation_cli
+    if operation == "create":
+        args = ["vlan", "create", "--name", "example-vlan", "--vlan-id", "3990"]
+    else:
+        state.append(copy.deepcopy(network))
+        args = ["vlan", operation, network["id"]]
+        if operation == "modify":
+            args += ["--name", "renamed"]
+
+    write = api.request.side_effect
+
+    async def commit_then_lose_response(*args, **kwargs):
+        await write(*args, **kwargs)
+        if timed_out:
+            raise TimeoutError("response timed out")
+        raise ConnectionFailed("response disconnected")
+
+    api.request.side_effect = commit_then_lose_response
+    assert cli.main([*args, "--apply"]) == 1
+    captured = capsys.readouterr()
+    assert "write may have succeeded" in captured.err
+    assert "inspect controller state before retrying" in captured.err
+    assert "Verified" not in captured.out
+    assert "Traceback" not in captured.err
+    assert api.request.await_count == 1
+    if operation == "create":
+        assert state[0]["vlan"] == 3990
+    elif operation == "modify":
+        assert state[0]["name"] == "renamed"
+    else:
+        assert state == []
+
+
 def test_vlan_cli_rejects_routed_delete_even_with_apply(mutation_cli):
     state, network, api = mutation_cli
     state.append(network | {"purpose": "interface"})
