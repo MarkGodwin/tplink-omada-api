@@ -59,12 +59,43 @@ $ omada dhcp modify --mac AA:BB:CC:11:22:33 --ip 192.168.1.101
 $ omada dhcp delete --mac AA:BB:CC:11:22:33
 ```
 
-To find the network ID for `--net-id`, list LAN networks:
+### VLANs
+
+List LAN networks and the DHCP state reported by the controller:
 
 ```sh
-$ omada devices  # list devices including their networks
+$ omada vlan list
 ```
 
+Use the existing port-profile command when inspecting switch VLAN profiles:
+
+```sh
+$ omada port-profiles
+```
+
+The listing includes the network ID needed by DHCP reservation commands; `--dump` additionally prints the raw model.
+
+VLAN-only lifecycle follows the library's shared controller compatibility handling; it has no additional exact-version requirement. The wire contract was live-tested on controller **5.15.8.12**; this records test provenance, not a compatibility guarantee for every other controller. Routed LAN (`purpose=interface`) targets are rejected. Names accept up to 128 UTF-8 bytes without control characters; VLAN IDs accept 2–4090. VLAN 1 and primary/default/management networks are protected.
+
+```sh
+$ omada vlan create --name example-vlan --vlan-id 3990
+$ omada vlan modify <network-id-or-exact-name> --name example-vlan-renamed
+$ omada vlan delete <network-id-or-exact-name>
+```
+
+These commands **preview by default**, using reads for target/conflict validation but sending no mutation. Add `--apply` to execute after fresh validation:
+
+```sh
+$ omada vlan create --name example-vlan --vlan-id 3990 --apply
+```
+
+Creation uses `application=0` (switches and gateway) without routing or DHCP. Existing All/trunk profiles can carry the new VLAN; no subnet does **not** imply isolation. This command does not explicitly assign SSIDs, switch-port profiles/PVIDs or policies. Review dependencies before changing a VLAN ID or deleting a network; controller conflict checks remain authoritative.
+
+The library provides typed `VlanCreate` and `VlanUpdate` requests in `tplink_omada_client.vlans`, read-only `preview_vlan_create/update/delete` helpers, and `OmadaSiteClient.create_vlan/update_vlan/delete_vlan`. Updates preserve existing writable settings and reject unknown controller fields. No-op updates do not write. Mutations return acknowledgements, so successful create/update results and deletion absence are verified by re-listing.
+
+When applying a previously resolved network ID through the library, pass `by_id=True` to `update_vlan` or `delete_vlan` (also supported by their preview helpers). This fails if that ID disappears instead of treating it as another network's name. The CLI automatically uses this strict identity mode after its initial ID/name selection.
+
+On a read-back failure, inspect the controller before retrying: a write may already have succeeded. There is no automatic write retry or broad cleanup at the lifecycle layer. To reverse an update, explicitly apply the old name/ID; to remove a created test network, preview deletion by its exact ID and explicitly apply it. Do not recreate a deleted network expecting restored IDs or dependencies. Routed LAN, gateway subnet and DHCP mutations remain a separate validation gate.
 
 To see a list of all the available commands, run:
 
