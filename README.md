@@ -28,6 +28,27 @@ Only a subset of the controller's features are supported:
 Tested with OC200 on Omada Controller Version 5.5.7 - 6.2.x. Other versions may not be fully compatible.
 Version 5.0.x is definitely not compatible.
 
+## Controller update checks
+
+`await client.check_firmware_updates()` follows the controller's configured release
+channel. Omada 6.3 or later uses `maintenance/software/channelUpdate` directly for
+both software and hardware controllers; older versions use
+`controller/notification/updateInfo`. On 6.3 or later, you can check a different channel without changing
+the controller's configuration or installing an update:
+
+```python
+updates = await client.check_firmware_updates(channel=0)  # Release channel
+if updates.upgrade:
+    print(updates.current_version, updates.latest_version)
+    print(updates.release_notes)
+```
+
+Software controllers return application versions in `updates.software`. Hardware
+controllers such as the OC200 return firmware versions in `updates.hardware`;
+their release notes may describe a different controller application version.
+An explicitly requested channel that is absent from the response, or channel
+selection on a controller older than 6.3, raises `ValueError`.
+
 ## CLI
 
 This package provides a simple CLI for interacting with one or more Omada Controllers. To start using the
@@ -47,6 +68,37 @@ Once you have successfully targeted a controller you can test that things are wo
 $ omada devices
 ```
 This will list all the devices being managed by your controller.
+
+### Firmware
+
+Check controller and device firmware, optionally selecting the controller's release channel:
+
+```sh
+$ omada firmware
+$ omada firmware --channel 0 --release-notes
+```
+
+`--channel 0` checks the release channel on Omada 6.3 or later without changing the
+controller's configured channel. Omit it to follow the configured channel. This
+option applies only to the controller update check; device checks are unchanged.
+
+For a hardware controller such as the OC200, preview the available update:
+
+```sh
+$ omada -t OC200 controller-firmware-update --channel 0 --release-notes
+```
+
+Add `--apply` to submit the update and restart the controller:
+
+```sh
+$ omada -t OC200 controller-firmware-update --channel 0 --apply
+```
+
+Each invocation checks the channel again and selects its latest available firmware.
+Omit `--channel` to use the configured channel. The command does not change the
+configured channel or update managed devices. It rejects software controllers and
+updates prohibited by the controller. A successful exit after `--apply` means the
+request was accepted; check the controller's web interface for installation progress.
 
 ### DHCP
 

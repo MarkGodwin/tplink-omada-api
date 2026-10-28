@@ -12,7 +12,11 @@ async def command_firmware(args) -> int:
     config = get_target_config(controller)
 
     async with to_omada_connection(config) as client:
-        controller_updates = await client.check_firmware_updates()
+        try:
+            controller_updates = await client.check_firmware_updates(channel=args.get("channel"))
+        except ValueError as error:
+            print(error)
+            return 1
         controller_update_found = False
         if controller_updates.software:
             software_update = controller_updates.software
@@ -63,3 +67,7 @@ def arg_parser(subparsers) -> None:
 
     firmware_parser.add_argument("-d", "--dump", help="Output raw firmware information", action="store_true")
     firmware_parser.add_argument("-rn", "--release-notes", help="Show release notes for firmware updates", action="store_true")
+    firmware_parser.add_argument(
+        "--channel", type=int, metavar="ID",
+        help="Controller release channel ID (0 for release; Omada 6.3+). Defaults to the configured channel; does not change it.",
+    )

@@ -24,9 +24,8 @@ def _client(responses, version="6.3.0.45"):
 
 
 @pytest.mark.parametrize("channel", [0, 1], ids=["stable", "beta"])
-@pytest.mark.parametrize("legacy", [{}, {"hardware": None, "software": None}])
-def test_software_update_uses_selected_release_channel(channel, legacy):
-    """Empty notifications fall back to the selected channel, regardless of list order."""
+def test_software_update_uses_selected_release_channel(channel):
+    """Modern controllers use the selected channel directly, regardless of list order."""
     selected = {
         "channel": channel,
         "update": True,
@@ -37,7 +36,6 @@ def test_software_update_uses_selected_release_channel(channel, legacy):
         "denyUpgrade": False,
     }
     client, api = _client([
-        legacy,
         {"isSoftController": True},
         {
             "currentControllerVer": "6.3.0.45",
@@ -57,7 +55,6 @@ def test_software_update_uses_selected_release_channel(channel, legacy):
     assert update.release_url == "https://example.com/release-notes"
     assert update.software.download_link == "https://example.com/controller.deb"
     assert api.request.await_args_list == [
-        (("get", "api/v2/controller/notification/updateInfo"),),
         (("get", "api/v2/anon/controllerType"),),
         (("get", "api/v2/maintenance/software/channelUpdate"),),
     ]
@@ -67,7 +64,6 @@ def test_software_update_uses_selected_release_channel(channel, legacy):
 def test_software_without_update_reports_current_version(extra):
     """An update on another channel or an installed build must not create a false update."""
     client, _ = _client([
-        {},
         {"isSoftController": True},
         {
             "currentControllerVer": "6.3.0.111",
@@ -94,7 +90,7 @@ def test_software_without_update_reports_current_version(extra):
 }])
 def test_missing_selected_channel_keeps_empty_update(channel_data):
     """Missing channel data must not select a different channel or invent an update."""
-    client, _ = _client([{}, {"isSoftController": True}, channel_data])
+    client, _ = _client([{"isSoftController": True}, channel_data])
 
     update = asyncio.run(client.check_firmware_updates())
 
@@ -113,21 +109,28 @@ def test_older_controllers_do_not_query_release_channels(version):
     assert api.request.await_count == 1
 
 
-def test_hardware_controller_does_not_query_software_channels():
-    """An empty hardware notification does not use a software-only endpoint."""
-    client, api = _client([{}, {"isSoftController": False}])
+def test_hardware_uses_shared_channel_endpoint():
+    """Hardware controllers also use software/channelUpdate on 6.3."""
+    client, api = _client([
+        {"isSoftController": False},
+        {"currentChannel": 2, "currentControllerVer": "6.3.0.110",
+         "upgradeList": [{"channel": 2, "update": False}]},
+        {"currentVersion": "2.27.24"},
+    ])
 
     update = asyncio.run(client.check_firmware_updates())
 
-    assert update.update is None
-    assert api.request.await_count == 2
+    assert update.hardware is not None
+    assert update.software is None
+    assert update.current_version == update.latest_version == "2.27.24"
+    assert api.request.await_count == 3
 
 
 @pytest.mark.parametrize("section", ["hardware", "software"])
 def test_existing_notifications_are_preserved(section):
     """Valid notifications continue to use their existing data without extra requests."""
     legacy = {section: {"upgrade": True, "currentVersion": "6.3.0.45", "latestVersion": "6.3.0.111"}}
-    client, api = _client([legacy])
+    client, api = _client([legacy], version="6.2.10.17")
 
     update = asyncio.run(client.check_firmware_updates())
 
@@ -135,13 +138,13 @@ def test_existing_notifications_are_preserved(section):
     assert update.upgrade is True
     assert update.latest_version == "6.3.0.111"
     assert api.request.await_count == 1
-    api.get_controller_version.assert_not_awaited()
+    api.get_controller_version.assert_awaited_once()
 
 
 @pytest.mark.parametrize("error", [RequestFailed(403, "Forbidden"), LoginFailed(-30109, "Login failed"), ConnectionFailed()])
 def test_channel_request_errors_propagate(error):
     """Authentication, permission and connection failures must not appear as no update."""
-    client, _ = _client([{}, {"isSoftController": True}, error])
+    client, _ = _client([{"isSoftController": True}, error])
 
     with pytest.raises(type(error)):
         asyncio.run(client.check_firmware_updates())
