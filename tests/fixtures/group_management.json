@@ -1,0 +1,5 @@
+[
+  {"groupId":"ip-example","name":"Example hosts","type":0,"count":null,"ipList":[{"ip":"192.0.2.7","mask":"32"}],"portList":null,"macAddressList":null},
+  {"groupId":"ports-example","name":"Example services","type":1,"count":null,"ipList":[],"portList":["80","443"],"macAddressList":null},
+  {"groupId":"mac-example","name":"Example devices","type":2,"count":null,"ipList":null,"portList":null,"macAddressList":[{"name":"Example device","macAddress":"02-AA-BB-CC-DD-01","ruleId":"example-rule"}]}
+]

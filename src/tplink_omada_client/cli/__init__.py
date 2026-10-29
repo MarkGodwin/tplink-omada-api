@@ -21,6 +21,7 @@ from . import (
     command_dhcp,
     command_firmware,
     command_gateway,
+    command_groups,
     command_known_clients,
     command_poe,
     command_port_profiles,
@@ -65,6 +66,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     command_dhcp.arg_parser(subparsers)
     command_firmware.arg_parser(subparsers)
     command_gateway.arg_parser(subparsers)
+    command_groups.arg_parser(subparsers)
     command_known_clients.arg_parser(subparsers)
     command_poe.arg_parser(subparsers)
     command_port_profiles.arg_parser(subparsers)

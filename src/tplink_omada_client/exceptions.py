@@ -1,5 +1,7 @@
 """Exceptions that the library might throw."""
 
+from .group_models import GroupContext, GroupIdentity
+
 
 class OmadaClientException(Exception):
     """Base for all exceptions raised by the library."""
@@ -8,9 +10,10 @@ class OmadaClientException(Exception):
 class RequestFailed(OmadaClientException):
     """Generic rejection of any command by the controller."""
 
-    def __init__(self, error_code: int, msg: str):
+    def __init__(self, error_code: int, msg: str, *, application_rejection: bool = False):
         self._error_code = error_code
         self._msg = msg
+        self.application_rejection = application_rejection
         super().__init__(f"Omada controller responded '{msg}' ({error_code})")
 
 
@@ -53,3 +56,25 @@ class BadControllerUrl(OmadaClientException):
 
 class InvalidDevice(OmadaClientException):
     """Device type isn't valid for this operation."""
+
+
+class GroupWriteUncertain(OmadaClientException):
+    """A group write may have reached the controller but was not verified."""
+
+    def __init__(
+        self, operation: str, identity: GroupIdentity | None = None, *,
+        context: GroupContext | None = None, attempts: tuple[str, ...] = (), phase: str = "request",
+    ):
+        self.operation = operation
+        self.identity = identity
+        self.context = context
+        self.attempts = tuple(attempts)
+        self.phase = phase
+        self.acknowledged = "acknowledged" in self.attempts
+        target = f" ({identity.id})" if identity is not None else ""
+        scope = (f"; controller: {context.controller} ({context.controller_id}); site: {context.site_id}"
+                 if context is not None else "")
+        history = f"; mutation handoffs: {len(self.attempts)} {self.attempts}; phase: {phase}; acknowledged: {self.acknowledged}"
+        super().__init__(
+            f"Group {operation}{target} may have succeeded; inspect controller state before retrying{scope}{history}"
+        )

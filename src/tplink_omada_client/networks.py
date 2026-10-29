@@ -1,6 +1,7 @@
 """Definitions for Omada network data objects."""
 
 from .definitions import OmadaApiData
+from .group_models import IpSubnet, ObservedMacMember, PortRange, parse_port
 
 
 class DhcpReservation(OmadaApiData):
@@ -116,7 +117,43 @@ class EapAcl(OmadaApiData):
 class GroupProfile(OmadaApiData):
     """Group profile (IP group, MAC group, IP-Port group, etc.)."""
 
-    # Properties defined during ip-groups implementation
+    @property
+    def id(self) -> str | None:
+        return self._data.get("groupId")
+
+    @property
+    def name(self) -> str | None:
+        return self._data.get("name")
+
+    @property
+    def group_type(self) -> int | None:
+        return self._data.get("type")
+
+    @property
+    def ip_members(self) -> tuple[IpSubnet, ...]:
+        return tuple(IpSubnet(row["ip"], int(row["mask"])) for row in self._data.get("ipList") or [])
+
+    @property
+    def port_members(self) -> tuple[PortRange, ...]:
+        rows = self._data.get("portList")
+        if rows is None:
+            return ()
+        if not isinstance(rows, list):
+            raise TypeError("Malformed observed port membership")
+        return tuple(parse_port(text) for text in rows)
+
+    @property
+    def mac_members(self) -> tuple[ObservedMacMember, ...]:
+        members = []
+        for row in self._data.get("macAddressList") or []:
+            if row.get("name") is not None and not isinstance(row["name"], str):
+                raise ValueError("Malformed observed MAC alias")
+            if row.get("ruleId") is not None and type(row["ruleId"]) not in (str, int):
+                raise ValueError("Malformed observed MAC rule ID")
+            members.append(ObservedMacMember(
+                row["macAddress"], row.get("name"), row.get("ruleId"), "ruleId" in row, "name" in row,
+            ))
+        return tuple(members)
 
 
 class IpMacBinding(OmadaApiData):

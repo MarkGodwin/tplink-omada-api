@@ -1,7 +1,10 @@
 """Client for Omada Site requests."""
 
-from collections.abc import AsyncIterable
-from dataclasses import dataclass
+import asyncio
+from collections.abc import AsyncIterable, Mapping
+from copy import deepcopy
+from dataclasses import dataclass, replace
+from typing import Any
 
 from awesomeversion import AwesomeVersion
 
@@ -42,9 +45,20 @@ from .devices import (
     OmadaSwitchPort,
     OmadaSwitchPortDetails,
 )
-from .exceptions import InvalidDevice, OmadaClientException
-from .networks import DhcpReservation, LanNetwork
-from .omadaapiconnection import OmadaApiConnection
+from .exceptions import GroupWriteUncertain, InvalidDevice, OmadaClientException
+from .group_models import GroupContext, GroupCreate, GroupIdentity, GroupPreview, GroupUpdate, _safe_controller_endpoint
+from .groups import (
+    build_group_create,
+    build_group_delete,
+    build_group_update,
+    canonical_mac,
+    group_payload,
+    same_group_content,
+    selected_group,
+    validate_inventory,
+)
+from .networks import DhcpReservation, GroupProfile, LanNetwork
+from .omadaapiconnection import OmadaApiConnection, _RequestObservation
 from .topology import OmadaTopology
 from .vlans import VlanCreate, VlanUpdate, resolve_vlan_target, validate_vlan_conflicts, validate_vlan_target
 from .vpn import _VPN_LIST_ENDPOINTS, OmadaVpnCategory, OmadaVpnPolicy
@@ -1030,3 +1044,175 @@ class OmadaSiteClient:
             "delete",
             (await self._dhcp_url()) + "/" + mac.lower(),
         )
+
+    @property
+    def group_context(self) -> GroupContext:
+        """Resolved scope without URL userinfo, paths, query strings or fragments."""
+        return GroupContext(_safe_controller_endpoint(self._api._url), self._api._controller_id, self._site_id)
+
+    def _with_group_context(self, preview: GroupPreview) -> GroupPreview:
+        return replace(preview, context=self.group_context)
+
+    @staticmethod
+    def _check_group_page(result, rows) -> None:
+        if "totalRows" in result and (type(result["totalRows"]) is not int or result["totalRows"] != len(rows)):
+            raise ValueError("Incomplete group inventory")
+        if "currentPage" in result and (type(result["currentPage"]) is not int or result["currentPage"] != 1):
+            raise ValueError("Incomplete group inventory: not the first page")
+        if "currentSize" in result and (type(result["currentSize"]) is not int or result["currentSize"] < max(1, len(rows))):
+            raise ValueError("Malformed or contradictory group page size")
+        if "hasMore" in result and result["hasMore"] is not False:
+            raise ValueError("Incomplete group inventory")
+
+    async def get_groups(self) -> list[GroupProfile]:
+        """Read all group kinds from the internal site API."""
+        url = self._api.format_url("setting/profiles/groups", self._site_id)
+        result = await self._api.request("get", url)
+        if not isinstance(result, dict) or not isinstance(result.get("data"), list):
+            raise TypeError("Malformed group inventory")
+        rows = result["data"]
+        if any(not isinstance(row, dict) for row in rows):
+            raise ValueError("Malformed group inventory rows")
+        self._check_group_page(result, rows)
+        if any(type(row.get("type")) is int and row["type"] in (0, 1, 2)
+               and row.get("site") not in (None, self._site_id) for row in rows):
+            raise ValueError("Group inventory contains a foreign site")
+        return [GroupProfile(deepcopy(row)) for row in rows]
+
+    async def preview_group_create(self, request: GroupCreate) -> GroupPreview:
+        """Validate a create without changing group settings."""
+        build_group_create(request, [])
+        return self._with_group_context(build_group_create(request, await self.get_groups()))
+
+    async def preview_group_update(self, identity: GroupIdentity, request: GroupUpdate) -> GroupPreview:
+        """Inspect an update with a detached current preimage."""
+        return self._with_group_context(build_group_update(identity, request, await self.get_groups()))
+
+    async def preview_group_delete(self, identity: GroupIdentity) -> GroupPreview:
+        """Inspect deletion without detaching any consumers."""
+        return self._with_group_context(build_group_delete(identity, await self.get_groups()))
+
+    async def create_group(self, request: GroupCreate) -> GroupProfile:
+        """Create once at this layer and identify a unique verified new group."""
+        build_group_create(request, [])
+        inventory = await self.get_groups()
+        preview = build_group_create(request, inventory)
+        result = await self._apply_group(preview, inventory)
+        assert result is not None
+        return result
+
+    async def update_group(
+        self, identity: GroupIdentity, request: GroupUpdate, *, expected_data: Mapping[str, Any] | None = None,
+    ) -> GroupProfile:
+        """Update a stable identity, optionally guarding this invocation's preview."""
+        expected = deepcopy(dict(expected_data)) if expected_data is not None else None
+        inventory = await self.get_groups()
+        self._check_group_preimage(identity, inventory, expected)
+        preview = build_group_update(identity, request, inventory)
+        if preview.no_op:
+            return selected_group(identity, inventory)
+        result = await self._apply_group(preview, inventory)
+        assert result is not None
+        return result
+
+    async def delete_group(
+        self, identity: GroupIdentity, *, expected_data: Mapping[str, Any] | None = None,
+    ) -> None:
+        """Delete a stable identity, then verify absence."""
+        expected = deepcopy(dict(expected_data)) if expected_data is not None else None
+        inventory = await self.get_groups()
+        self._check_group_preimage(identity, inventory, expected)
+        preview = build_group_delete(identity, inventory)
+        await self._apply_group(preview, inventory)
+
+    @staticmethod
+    def _check_group_preimage(identity, inventory, expected) -> None:
+        current = selected_group(identity, inventory)
+        if expected is not None and current.raw_data != expected:
+            raise ValueError("Group changed since this invocation's preview; inspect the current state")
+
+    @staticmethod
+    def _group_failure(preview: GroupPreview, observation: _RequestObservation, phase: str) -> GroupWriteUncertain:
+        return GroupWriteUncertain(
+            preview.operation, preview.identity, context=preview.context,
+            attempts=tuple(observation._attempts), phase=phase,
+        )
+
+    @staticmethod
+    def _group_cancellation(error: asyncio.CancelledError, preview: GroupPreview, observation: _RequestObservation, phase: str) -> None:
+        recovery = OmadaSiteClient._group_failure(preview, observation, phase)
+        for name in ("operation", "identity", "context", "attempts", "phase", "acknowledged"):
+            setattr(error, f"group_{name}", getattr(recovery, name))
+        if observation.has_unresolved_attempt or observation.acknowledged:
+            setattr(error, "group_recovery", recovery)  # noqa: B010 - preserve the original standard CancelledError type
+            error.add_note(str(recovery))
+
+    async def _apply_group(self, preview: GroupPreview, inventory: list[GroupProfile]) -> GroupProfile | None:
+        operation = preview.operation
+        methods = {"create": "post", "update": "patch", "delete": "delete"}
+        if operation not in methods or (operation != "create" and preview.identity is None):
+            raise ValueError("Unsupported group operation or missing bound identity")
+        preview = self._with_group_context(preview)
+        path = "setting/profiles/groups"
+        if preview.identity is not None:
+            path += f"/{int(preview.identity.group_type)}/{preview.identity.id}"
+        url = self._api.format_url(path, self._site_id)
+        observation = _RequestObservation()
+        try:
+            kwargs: dict[str, Any] = {"observation": observation}
+            if operation != "delete":
+                kwargs["json"] = deepcopy(preview.after)
+            await self._api.request(methods[operation], url, **kwargs)
+        except asyncio.CancelledError as error:
+            self._group_cancellation(error, preview, observation, "request")
+            raise
+        except Exception as error:  # Phase, not exception class, determines write uncertainty.
+            if observation.has_unresolved_attempt or observation.acknowledged:
+                raise self._group_failure(preview, observation, "request") from error
+            raise
+        try:
+            current = await self.get_groups()
+            validate_inventory(current)
+            return self._verify_group(preview, inventory, current)
+        except asyncio.CancelledError as error:
+            self._group_cancellation(error, preview, observation, "read-back")
+            raise
+        except Exception as error:  # Every post-ack read-back failure needs recovery guidance.
+            raise self._group_failure(preview, observation, "read-back") from error
+
+    @staticmethod
+    def _verify_group(preview: GroupPreview, previous: list[GroupProfile], current: list[GroupProfile]) -> GroupProfile | None:
+        identity = preview.identity
+        if preview.operation == "delete":
+            assert identity is not None
+            if any((p.group_type, p.id) == (identity.group_type, identity.id) for p in current):
+                raise ValueError("Deleted group is still present")
+            return None
+        expected = deepcopy(preview.after)
+        assert expected is not None
+        if preview.operation == "create":
+            old_ids = {(p.group_type, p.id) for p in previous}
+            matches = [p for p in current if p.name == expected["name"] and p.group_type == expected["type"]]
+            if len(matches) != 1 or (matches[0].group_type, matches[0].id) in old_ids:
+                raise ValueError("Created group has no unique new identity")
+            profile = matches[0]
+            expected["id"] = profile.id
+        else:
+            assert identity is not None
+            profile = selected_group(identity, current)
+        actual = group_payload(profile)
+        member_fields = ("ipList", "portList", "macAddressList")
+        size = sum(len(expected.get(key) or []) for key in member_fields)
+        before = preview.before or {}
+        previous_size = sum(len(before.get(key) or []) for key in member_fields)
+        generated_count = (preview.operation == "create" and expected["count"] is None) or (
+            preview.operation == "update" and size != previous_size and before.get("count") == previous_size
+        )
+        # A populated count may follow member cardinality; other metadata drift still fails.
+        if generated_count and actual["count"] == size:
+            expected["count"] = actual["count"]
+        before_macs = {canonical_mac(row["macAddress"]) for row in (preview.before or {}).get("macAddressList") or []}
+        new_macs = {canonical_mac(row["macAddress"]) for row in expected.get("macAddressList") or []} - before_macs
+        if not same_group_content(expected, actual, new_macs=new_macs):
+            raise ValueError("Group read-back does not match requested and preserved state")
+        return profile
