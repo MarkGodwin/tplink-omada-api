@@ -10,7 +10,9 @@ from tplink_omada_client.cli import config
 @pytest.fixture
 def config_file(tmp_path, monkeypatch):
     path = tmp_path / ".omada.cfg"
-    monkeypatch.setattr(config, "_CONFIG_FILE", path)
+    monkeypatch.setattr(config.Path, "home", lambda: tmp_path)
+    monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
+    path.touch(mode=0o600)
     return path
 
 

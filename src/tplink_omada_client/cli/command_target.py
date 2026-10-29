@@ -61,8 +61,8 @@ async def _validate_and_save_config(target: str, config: ControllerConfig, args:
             sites = await client.get_sites()
             for site in sites:
                 if config.site == site.name:
-                    print(f"Set target {target} to controller {name} and site {site.name}")
                     set_target_config(target, config, args["set_default"])
+                    print(f"Set target {target} to controller {name} and site {site.name}")
                     return True
             print(f"Count not find site with name '{args['site']}' on the controller.")
             print("Make sure you specify the correct site name with the --site parameter.")

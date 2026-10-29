@@ -62,6 +62,28 @@ Where `NAME` is a name of your choosing to identify the targeted controller. `--
 default site name, 'Default'.  If you do not provide a password as an argument, you will be prompted for a
 password.
 
+### Configuration files
+
+New configurations are stored in `$XDG_CONFIG_HOME/omada/config.ini`, or
+`~/.config/omada/config.ini` when `XDG_CONFIG_HOME` is unset, empty or not an
+absolute path. An existing XDG file takes precedence. Otherwise, an existing
+`~/.omada.cfg` continues to be read and updated in place. Files are not merged
+or automatically migrated. An unreadable or malformed selected file produces
+an error rather than falling back to another file.
+
+New application directories are private (`0700`); saved configuration files
+use `0600`. Existing parent-directory permissions are left unchanged. Saves
+replace the selected file only after the complete new contents have been
+written; a failed save keeps the previous file. User-managed file symlinks
+remain intact.
+
+Enter passwords literally at the prompt; percent signs need no special escaping.
+The stored INI format retains doubled percent signs (`%%`) for compatibility
+with existing files/readers. If editing the INI manually, write each password
+percent as `%%`. Password placeholders such as `%(username)s` are not expanded
+into other configuration values. Configuration files contain credentials in
+plain text; keep them private and out of version control.
+
 Once you have successfully targeted a controller you can test that things are working by running:
 
 ```sh
