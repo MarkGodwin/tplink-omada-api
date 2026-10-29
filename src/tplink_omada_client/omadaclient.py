@@ -166,11 +166,49 @@ class OmadaClient:
         url = self._api.format_url("controller/setting")
         await self._api.request("patch", url, json=payload)
 
-    async def check_firmware_updates(self) -> OmadaControllerUpdateInfo:
-        """Check if controller firmware or software updates are available."""
-        result = await self._api.request("get", self._api.format_url("controller/notification/updateInfo"))
+    async def check_firmware_updates(self, *, channel: int | None = None) -> OmadaControllerUpdateInfo:
+        """Check for controller updates, optionally selecting a release channel on 6.3+.
 
-        return OmadaControllerUpdateInfo(result)
+        By default, use the controller's configured channel. Passing a channel ID
+        (0 for the release channel) only changes this check, not the controller's
+        configuration. Hardware results contain firmware versions, which differ
+        from the controller application version.
+        """
+        if await self.get_controller_version() < AwesomeVersion("6.3"):
+            if channel is not None:
+                raise ValueError("Release channel selection requires Omada 6.3 or later")
+            result = await self._api.request("get", self._api.format_url("controller/notification/updateInfo"))
+            return OmadaControllerUpdateInfo(result)
+
+        is_hardware = not (await self.get_controller_type()).is_soft_controller
+        return await self._get_channel_update_info(is_hardware, channel)
+
+    async def _get_channel_update_info(self, is_hardware: bool, channel_id: int | None) -> OmadaControllerUpdateInfo:
+        """Normalize release-channel updates for software and hardware controllers."""
+        result = await self._api.request("get", self._api.format_url("maintenance/software/channelUpdate"))
+        selected_channel = result.get("currentChannel") if channel_id is None else channel_id
+        channel = next((entry for entry in result.get("upgradeList", []) if entry["channel"] == selected_channel), None)
+        if channel is None:
+            if channel_id is not None:
+                raise ValueError(f"Controller did not report release channel {channel_id}")
+            return OmadaControllerUpdateInfo({})
+
+        current_version = result.get("currentControllerVer")
+        if is_hardware:
+            firmware = await self._api.request("get", self._api.format_url("maintenance/hardware/checkFirmware"))
+            # Channel versions on hardware are firmware versions, not currentControllerVer.
+            current_version = firmware.get("currentVersion")
+
+        section = "hardware" if is_hardware else "software"
+        return OmadaControllerUpdateInfo({section: {
+            "upgrade": channel["update"],
+            "currentVersion": current_version,
+            "latestVersion": channel.get("latestVersion", current_version) if channel["update"] else current_version,
+            "releaseLog": channel.get("releaseLog"),
+            "releaseUrl": channel.get("releaseUrl"),
+            "downloadLink": channel.get("downloadUrl"),
+            "denyUpgrade": channel.get("denyUpgrade"),
+        }})
 
     async def install_controller_firmware(self, target_version: str) -> bool:
         """Install controller firmware remotely when supported."""

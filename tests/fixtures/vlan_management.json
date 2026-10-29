@@ -1,0 +1,68 @@
+{
+  "controller_version": "5.15.8.12",
+  "provenance": {
+    "controller_source": "modules/settings/wiredNetwork/wiredLan/wiredLanNetworks/controllers-178105d930.js",
+    "model_source": "modules/settings/wiredNetwork/wiredLan/wiredLanNetworks/models-197d2b762b.js",
+    "verification": "Authorised disposable VLAN-only create, rename and delete; all original network records identical afterwards.",
+    "sanitization": "Site, network and interface identifiers are synthetic. Acknowledgement message text is synthetic; only envelope keys were captured."
+  },
+  "create": {
+    "method": "post",
+    "path": "setting/lan/vlans",
+    "payload": {
+      "application": 0,
+      "name": "example-vlan",
+      "purpose": "vlan",
+      "vlans": "3990",
+      "dhcpL2RelayEnable": false,
+      "igmpSnoopEnable": false,
+      "mldSnoopEnable": false,
+      "dhcpGuard": {"enable": false, "dhcpSvr1": null, "dhcpSvr2": null},
+      "dhcpv6Guard": {"enable": false, "dhcpv6Svr1": null, "dhcpv6Svr2": null}
+    }
+  },
+  "network": {
+    "id": "example-network-id",
+    "site": "example-site-id",
+    "name": "example-vlan",
+    "purpose": "vlan",
+    "interfaceIds": ["example-interface-2", "example-interface-3", "example-interface-4", "example-interface-5"],
+    "application": 0,
+    "vlan": 3990,
+    "igmpSnoopEnable": false,
+    "fastLeaveEnable": false,
+    "mldSnoopEnable": false,
+    "dhcpv6Guard": {"enable": false},
+    "dhcpL2RelayEnable": false,
+    "dhcpGuard": {"enable": false},
+    "portal": false,
+    "accessControlRule": false,
+    "rateLimit": false,
+    "allLan": false,
+    "resource": 0,
+    "origName": "example-vlan",
+    "interface": false,
+    "primary": false
+  },
+  "update": {
+    "method": "patch",
+    "path": "setting/lan/networks/example-network-id",
+    "payload": {
+      "application": 0,
+      "name": "example-vlan-renamed",
+      "purpose": "vlan",
+      "vlan": 3990,
+      "dhcpL2RelayEnable": false,
+      "igmpSnoopEnable": false,
+      "mldSnoopEnable": false,
+      "dhcpGuard": {"enable": false, "dhcpSvr1": null, "dhcpSvr2": null},
+      "dhcpv6Guard": {"enable": false, "dhcpv6Svr1": null, "dhcpv6Svr2": null}
+    }
+  },
+  "delete": {"method": "delete", "path": "setting/lan/networks/example-network-id"},
+  "acknowledgement": {"errorCode": 0, "msg": "Example acknowledgement"},
+  "rejected_scalar_create": {
+    "errorCode": -1001,
+    "msg": "Parameter [vlan] should not be null."
+  }
+}

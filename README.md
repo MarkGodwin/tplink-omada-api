@@ -29,6 +29,27 @@ Only a subset of the controller's features are supported:
 Tested with OC200 on Omada Controller Version 5.5.7 - 6.2.x. Other versions may not be fully compatible.
 Version 5.0.x is definitely not compatible.
 
+## Controller update checks
+
+`await client.check_firmware_updates()` follows the controller's configured release
+channel. Omada 6.3 or later uses `maintenance/software/channelUpdate` directly for
+both software and hardware controllers; older versions use
+`controller/notification/updateInfo`. On 6.3 or later, you can check a different channel without changing
+the controller's configuration or installing an update:
+
+```python
+updates = await client.check_firmware_updates(channel=0)  # Release channel
+if updates.upgrade:
+    print(updates.current_version, updates.latest_version)
+    print(updates.release_notes)
+```
+
+Software controllers return application versions in `updates.software`. Hardware
+controllers such as the OC200 return firmware versions in `updates.hardware`;
+their release notes may describe a different controller application version.
+An explicitly requested channel that is absent from the response, or channel
+selection on a controller older than 6.3, raises `ValueError`.
+
 ## CLI
 
 This package provides a simple CLI for interacting with one or more Omada Controllers. To start using the
@@ -166,6 +187,36 @@ tracks a cardinality change from a matching preimage count. Other count drift st
 fails verification, and count never proves a group is unused. Other network domains
 remain separate capabilities.
 
+### Firmware
+
+Check controller and device firmware, optionally selecting the controller's release channel:
+
+```sh
+$ omada firmware
+$ omada firmware --channel 0 --release-notes
+```
+
+`--channel 0` checks the release channel on Omada 6.3 or later without changing the
+controller's configured channel. Omit it to follow the configured channel. This
+option applies only to the controller update check; device checks are unchanged.
+
+For a hardware controller such as the OC200, preview the available update:
+
+```sh
+$ omada -t OC200 controller-firmware-update --channel 0 --release-notes
+```
+
+Add `--apply` to submit the update and restart the controller:
+
+```sh
+$ omada -t OC200 controller-firmware-update --channel 0 --apply
+```
+
+Each invocation checks the channel again and selects its latest available firmware.
+Omit `--channel` to use the configured channel. The command does not change the
+configured channel or update managed devices. It rejects software controllers and
+updates prohibited by the controller. A successful exit after `--apply` means the
+request was accepted; check the controller's web interface for installation progress.
 
 ### DHCP
 
@@ -178,12 +229,43 @@ $ omada dhcp modify --mac AA:BB:CC:11:22:33 --ip 192.168.1.101
 $ omada dhcp delete --mac AA:BB:CC:11:22:33
 ```
 
-To find the network ID for `--net-id`, list LAN networks:
+### VLANs
+
+List LAN networks and the DHCP state reported by the controller:
 
 ```sh
-$ omada devices  # list devices including their networks
+$ omada vlan list
 ```
 
+Use the existing port-profile command when inspecting switch VLAN profiles:
+
+```sh
+$ omada port-profiles
+```
+
+The listing includes the network ID needed by DHCP reservation commands; `--dump` additionally prints the raw model.
+
+VLAN-only lifecycle follows the library's shared controller compatibility handling; it has no additional exact-version requirement. The wire contract was live-tested on controller **5.15.8.12**; this records test provenance, not a compatibility guarantee for every other controller. Routed LAN (`purpose=interface`) targets are rejected. Names accept up to 128 UTF-8 bytes without control characters; VLAN IDs accept 2–4090. VLAN 1 and primary/default/management networks are protected.
+
+```sh
+$ omada vlan create --name example-vlan --vlan-id 3990
+$ omada vlan modify <network-id-or-exact-name> --name example-vlan-renamed
+$ omada vlan delete <network-id-or-exact-name>
+```
+
+These commands **preview by default**, using reads for target/conflict validation but sending no mutation. Add `--apply` to execute after fresh validation:
+
+```sh
+$ omada vlan create --name example-vlan --vlan-id 3990 --apply
+```
+
+Creation uses `application=0` (switches and gateway) without routing or DHCP. Existing All/trunk profiles can carry the new VLAN; no subnet does **not** imply isolation. This command does not explicitly assign SSIDs, switch-port profiles/PVIDs or policies. Review dependencies before changing a VLAN ID or deleting a network; controller conflict checks remain authoritative.
+
+The library provides typed `VlanCreate` and `VlanUpdate` requests in `tplink_omada_client.vlans`, read-only `preview_vlan_create/update/delete` helpers, and `OmadaSiteClient.create_vlan/update_vlan/delete_vlan`. Updates preserve existing writable settings and reject unknown controller fields. No-op updates do not write. Mutations return acknowledgements, so successful create/update results and deletion absence are verified by re-listing.
+
+When applying a previously resolved network ID through the library, pass `by_id=True` to `update_vlan` or `delete_vlan` (also supported by their preview helpers). This fails if that ID disappears instead of treating it as another network's name. The CLI automatically uses this strict identity mode after its initial ID/name selection.
+
+On a read-back failure, inspect the controller before retrying: a write may already have succeeded. There is no automatic write retry or broad cleanup at the lifecycle layer. To reverse an update, explicitly apply the old name/ID; to remove a created test network, preview deletion by its exact ID and explicitly apply it. Do not recreate a deleted network expecting restored IDs or dependencies. Routed LAN, gateway subnet and DHCP mutations remain a separate validation gate.
 
 To see a list of all the available commands, run:
 

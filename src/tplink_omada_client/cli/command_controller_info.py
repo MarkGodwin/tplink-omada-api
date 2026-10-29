@@ -21,21 +21,32 @@ async def command_controller_info(args) -> int:
 
     conn = to_omada_connection(config)
     info = await conn.get_controller_info()  # We can get controller info without a login
-    print(f"Controller version: {info.controller_version}")
-    print(f"API version: {_format_value(info.api_version)}")
-    print(f"Controller ID: {info.omadac_id}")
-    print(f"Controller type: {_format_value(info.type)}")
-    print(f"Controller category: {_format_value(info.omadac_category)}")
-    print(f"Configured: {_format_value(info.configured)}")
-    print(f"Root registered: {_format_value(info.registered_root)}")
-    print(f"Supports Omada app: {_format_value(info.support_app)}")
-    print(f"MSP mode: {_format_value(info.msp_mode)}")
-    print(f"Omada cloud URL: {_format_value(info.omada_cloud_url)}")
-    dump_raw_data(args, info)
 
     async with conn as client:
-        name = await client.get_controller_name()
-        print(f"Controller name: {name}")
+        controller_type = await client.get_controller_type()
+        controller_status = await client.get_controller_status()
+
+        name = controller_status.name or await client.get_controller_name()
+
+        print(f"Controller name: {_format_value(name)}")
+        print(f"Controller version: {controller_status.controller_version}")
+        print(f"API version: {_format_value(info.api_version)}")
+        print(f"Controller ID: {info.omadac_id}")
+        print(f"Controller type: {_format_value(info.type)}")
+        print(f"Software Controller: {_format_value(controller_type.is_soft_controller)}")
+        print(f"Combined gateway: {_format_value(controller_type.combined_gateway)}")
+        print(f"Controller MAC: {controller_status.mac}")
+        print(f"Controller uptime: {controller_status.uptime}")
+        print(f"Controller model: {_format_value(controller_status.reported_model)}")
+        print(f"Controller category: {_format_value(info.omadac_category)}")
+        print(f"Configured: {_format_value(info.configured)}")
+        print(f"Root registered: {_format_value(info.registered_root)}")
+        print(f"Supports Omada app: {_format_value(info.support_app)}")
+        print(f"MSP mode: {_format_value(info.msp_mode)}")
+        print(f"Omada cloud URL: {_format_value(info.omada_cloud_url)}")
+        dump_raw_data(args, info)
+        dump_raw_data(args, controller_type)
+        dump_raw_data(args, controller_status)
 
     return 0
 

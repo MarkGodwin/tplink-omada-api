@@ -5,6 +5,8 @@
 import asyncio
 from typing import Any
 
+from awesomeversion import AwesomeVersion
+
 from tplink_omada_client.definitions import (
     OmadaControllerStatus,
     OmadaControllerUpdateInfo,
@@ -27,6 +29,10 @@ class FakeApi:
         url = f"api/v2/{end_point}"
         self.urls.append(url)
         return url
+
+    async def get_controller_version(self):
+        """Use the legacy endpoint for this controller test fixture."""
+        return AwesomeVersion("6.2.10.17")
 
     async def request(self, method: str, url: str, params=None, json=None, data=None):
         """Record requests and return the configured response."""

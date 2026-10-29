@@ -1,7 +1,7 @@
 """Tests for network data models."""
 
 
-from tplink_omada_client.networks import DhcpReservation
+from tplink_omada_client.networks import DhcpReservation, LanNetwork
 
 
 def test_dhcp_reservation():
@@ -69,3 +69,39 @@ def test_dhcp_reservation_repr():
     assert "ip=10.0.0.1" in rep
     assert "description=test" in rep
     assert "_data" not in rep
+
+
+def test_lan_network_exposes_listing_fields():
+    """LanNetwork exposes the fields returned by the LAN-network endpoint."""
+    network = LanNetwork(
+        {
+            "id": "network-1",
+            "name": "IOT",
+            "purpose": "interface",
+            "vlan": 30,
+            "gatewaySubnet": "192.168.30.1/24",
+            "dhcpSettings": {"enable": True},
+        }
+    )
+
+    assert network.id == "network-1"
+    assert network.name == "IOT"
+    assert network.purpose == "interface"
+    assert network.vlan_id == 30
+    assert network.gateway_subnet == "192.168.30.1/24"
+    assert network.dhcp_enabled is True
+
+
+def test_lan_network_allows_missing_optional_listing_fields():
+    """LanNetwork reports absent optional controller fields as None."""
+    network = LanNetwork(
+        {
+            "id": "network-2",
+            "name": "No DHCP",
+            "purpose": "interface",
+        }
+    )
+
+    assert network.vlan_id is None
+    assert network.gateway_subnet is None
+    assert network.dhcp_enabled is None
