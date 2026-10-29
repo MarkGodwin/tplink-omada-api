@@ -40,6 +40,7 @@ from . import (
     command_vpn,
     command_wan,
 )
+from .config import ConfigError
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -95,6 +96,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     except argparse.ArgumentError as error:
         parser.print_usage()
         print(error.message)
+        return 1
+    except ConfigError as error:
+        print(error)
         return 1
     except LoginFailed as error:
         print(error)
