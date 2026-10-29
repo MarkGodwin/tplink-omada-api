@@ -24,11 +24,14 @@ class ControllerConfig:
 
 
 def _parse_controller_config(config: SectionProxy) -> ControllerConfig:
-    """Parse controller config section"""
+    """Parse controller config without expanding password placeholders."""
+    password = config.get("password", raw=True)
+    if password is None:
+        raise KeyError("password")
     return ControllerConfig(
         config["url"],
         config["username"],
-        config["password"],
+        password.replace("%%", "%"),
         config["site"],
         config.get("verify_ssl", "True").lower() == "true",
     )
@@ -73,7 +76,8 @@ def set_target_config(name: str, config: ControllerConfig, set_default: bool) ->
     config_parser.add_section(stored_name)
     config_parser.set(stored_name, "url", config.url)
     config_parser.set(stored_name, "username", config.username)
-    config_parser.set(stored_name, "password", config.password)
+    # Keep the legacy INI escape format, but never interpret password placeholders.
+    config_parser.set(stored_name, "password", config.password.replace("%", "%%"))
     config_parser.set(stored_name, "site", config.site)
     config_parser.set(stored_name, "verify_ssl", str(config.verify_ssl))
     if set_default:
