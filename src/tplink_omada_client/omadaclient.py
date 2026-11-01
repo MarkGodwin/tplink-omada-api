@@ -91,9 +91,7 @@ class OmadaClient:
 
     async def get_controller_status(self) -> OmadaControllerStatus:
         """Get status information for the Omada controller."""
-        result = await self._api.request(
-            "get", self._api.format_url("maintenance/controllerStatus")
-        )
+        result = await self._api.request("get", self._api.format_url("maintenance/controllerStatus"))
 
         return OmadaControllerStatus(result)
 
@@ -136,35 +134,54 @@ class OmadaClient:
 
         return result["rebootTime"]
 
-    async def set_certificate(self, file: str, cert_password: str):
-        """Upload a new PKCS12 PFX certificate to the controller."""
+    async def set_certificate(self, file: str, cert_password: str = "", *, key_file: str | None = None, cert_type: str | None = None):
+        """Upload and enable a PFX, JKS, or PEM controller certificate.
 
-        base_name = os.path.basename(file)
+        Supplying key_file selects PEM by default; otherwise PFX is used for
+        compatibility. PEM requires a separate, unencrypted private key.
+        The controller may need to be rebooted to apply the certificate.
+        """
+        cert_type = cert_type.upper() if cert_type is not None else ("PEM" if key_file is not None else "PFX")
+        if cert_type not in {"PFX", "JKS", "PEM"}:
+            raise ValueError("Certificate type must be PFX, JKS, or PEM")
+        if cert_type == "PEM":
+            if not key_file:
+                raise ValueError("PEM certificates require a key file")
+            if cert_password:
+                raise ValueError("PEM requires an unencrypted private key; do not supply a password")
+        elif key_file is not None:
+            raise ValueError("A key file can only be supplied for PEM certificates")
+
+        # Read both files before making changes on the controller.
         cert_data = await asyncio.to_thread(_read_binary_file, file)
-
-        with MultipartWriter("form-data") as mpwriter:
-            file_part = mpwriter.append(cert_data, CIMultiDict({"Content-Type": "application/x-pkcs12"}))
-            file_part.set_content_disposition("form-data", name="file", filename=base_name)
-
-            data_part = mpwriter.append_json({"cerName": base_name})
-            data_part.set_content_disposition("form-data", name="data")
-
-            url = self._api.format_url("files/controller/certificate")
-            upload_result = await self._api.request("post", url, data=mpwriter)
-        cert_id = upload_result["cerId"]
-        cert_name = upload_result["cerName"]
-
-        payload = {
-            "certificate": {
-                "cerId": cert_id,
-                "cerName": cert_name,
-                "cerType": "PFX",
-                "enable": True,
-                "keyPassword": cert_password,
-            }
+        key_data = await asyncio.to_thread(_read_binary_file, key_file) if key_file is not None else None
+        content_type = "application/x-pkcs12" if cert_type == "PFX" else "application/octet-stream"
+        upload_result = await self._upload_certificate_file(file, cert_data, "certificate", "cerName", content_type)
+        certificate = {
+            "cerId": upload_result["cerId"],
+            "cerName": upload_result["cerName"],
+            "cerType": cert_type,
+            "enable": True,
         }
+        if key_data is not None:
+            key_result = await self._upload_certificate_file(key_file, key_data, "key", "keyName", "application/octet-stream")
+            certificate.update(keyId=key_result["keyId"], keyName=key_result["keyName"])
+        else:
+            certificate["keyPassword"] = cert_password
+
         url = self._api.format_url("controller/setting")
-        await self._api.request("patch", url, json=payload)
+        await self._api.request("patch", url, json={"certificate": certificate})
+
+    async def _upload_certificate_file(self, file: str, data: bytes, endpoint: str, name_field: str, content_type: str):
+        """Upload a certificate or private key using the controller's multipart API."""
+        base_name = os.path.basename(file)
+        with MultipartWriter("form-data") as mpwriter:
+            file_part = mpwriter.append(data, CIMultiDict({"Content-Type": content_type}))
+            file_part.set_content_disposition("form-data", name="file", filename=base_name)
+            data_part = mpwriter.append_json({name_field: base_name})
+            data_part.set_content_disposition("form-data", name="data")
+            url = self._api.format_url(f"files/controller/{endpoint}")
+            return await self._api.request("post", url, data=mpwriter)
 
     async def check_firmware_updates(self, *, channel: int | None = None) -> OmadaControllerUpdateInfo:
         """Check for controller updates, optionally selecting a release channel on 6.3+.
@@ -200,15 +217,17 @@ class OmadaClient:
             current_version = firmware.get("currentVersion")
 
         section = "hardware" if is_hardware else "software"
-        return OmadaControllerUpdateInfo({section: {
-            "upgrade": channel["update"],
-            "currentVersion": current_version,
-            "latestVersion": channel.get("latestVersion", current_version) if channel["update"] else current_version,
-            "releaseLog": channel.get("releaseLog"),
-            "releaseUrl": channel.get("releaseUrl"),
-            "downloadLink": channel.get("downloadUrl"),
-            "denyUpgrade": channel.get("denyUpgrade"),
-        }})
+        return OmadaControllerUpdateInfo({
+            section: {
+                "upgrade": channel["update"],
+                "currentVersion": current_version,
+                "latestVersion": channel.get("latestVersion", current_version) if channel["update"] else current_version,
+                "releaseLog": channel.get("releaseLog"),
+                "releaseUrl": channel.get("releaseUrl"),
+                "downloadLink": channel.get("downloadUrl"),
+                "denyUpgrade": channel.get("denyUpgrade"),
+            }
+        })
 
     async def install_controller_firmware(self, target_version: str) -> bool:
         """Install controller firmware remotely when supported."""

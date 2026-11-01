@@ -181,3 +181,32 @@ There is a VS Code development container, which sets up all of the requirements 
 ## License
 
 MIT Open Source license.
+
+### Controller HTTPS certificates
+
+Upload a PFX certificate (prompts for its password if `--password` is omitted):
+
+```sh
+omada set-certificate controller.pfx
+omada set-certificate controller.pfx --password ''
+```
+
+Upload a PEM certificate or certificate chain with its separate, unencrypted private key:
+
+```sh
+omada set-certificate fullchain.pem --key-file privkey.pem
+```
+
+The key option selects PEM automatically. Use `--format JKS` for a Java keystore:
+
+```sh
+omada set-certificate controller.jks --format JKS
+```
+
+In the Python API, existing `await client.set_certificate("controller.pfx", "password")`
+calls continue to work. For PEM, use
+`await client.set_certificate("fullchain.pem", key_file="privkey.pem")`;
+for JKS, use `await client.set_certificate("controller.jks", "password", cert_type="JKS")`.
+PEM does not prompt for a password and requires an unencrypted key. Key algorithm
+support depends on the controller firmware. Rebooting the controller after upload to
+apply the new certificate seems to be unnecessary, on version 6.3 at least.
